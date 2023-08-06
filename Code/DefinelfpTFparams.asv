@@ -1,0 +1,32 @@
+function params = DefinelfpTFparams(Nav, Spk, Lfp)
+%Define a set of parameters needed to for time frequency analysis of Lfp
+%data
+
+%Experimental condition over which time frequency analyses will be
+%conducted
+params.condition = 3;
+
+%directions along X over which time frequency analyses will be conducted
+params.dir = [-1 1];
+
+%Minimum speed threshold over which time frequency analyses will be 
+%conducted
+params.spdthreshold = 5;
+
+%Frequency range for TF analysis
+params.fpass = [0 40];
+
+%Tapers parameters in the form [TW K] where TW is the time-bandwidth 
+%product and K is the number of tapers to be used (less than or equal to
+%2TW-1). 
+params.tapers = [3 4];
+
+%Length of the moving window in seconds
+params.timewin = 3;
+
+%Step size of the moving window in seconds
+params.timesteps = .02;
+
+params.Fs = nanmean(1./EXP.Lfp.sampleSize);
+
+end

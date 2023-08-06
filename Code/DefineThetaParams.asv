@@ -1,0 +1,65 @@
+function params = DefineThetaParams(Nav,Spk,Lfp)
+%Define a set of parameters needed for theta related analyses
+
+%Experimental condition over which place fields will be estimated
+params.condition = 3;
+
+%Directions over which place fields will be estimated
+params.dir = [-1 1];
+
+%lap types over which place fields will be estimated
+params.laptype = [-1 1];
+
+%Minimum speed threshold over which place fields will be computed
+params.spdthreshold = 5;
+
+%Subset of cells for which place fields will be computed
+params.cellidx = true(1, size(Spk.spikeTrain, 2));
+
+%Sampling rate of the data
+params.sampleRate = 1 / nanmean(diff(Nav.sampleTimes));
+
+%Range of positions over which place fields will be estimated (in cm).
+params.Xrange = [0 100];
+
+%Size of the position bins (in cm).
+params.Xbinsize = 2;
+
+%Size of the gaussian window for smoothing place fields (in cm).
+params.Xsmthbinsize = 2;
+
+%Size of the gaussian window for smoothing place fields (in bins).
+params.XsmthNbins = params.smthbinsize / params.binsize;
+
+%Edges of position bins used to discretize positions
+params.Xbinedges = params.range(1):params.binsize:params.range(2);
+
+%Range of positions over which place fields will be estimated (in cm).
+params.Xrange = [0 100];
+
+%Size of the position bins (in cm).
+params.Xbinsize = 2;
+
+%Size of the gaussian window for smoothing place fields (in cm).
+params.Xsmthbinsize = 2;
+
+%Size of the gaussian window for smoothing place fields (in bins).
+params.XsmthNbins = params.smthbinsize / params.binsize;
+
+%Edges of position bins used to discretize positions
+params.Xbinedges = params.range(1):params.binsize:params.range(2);
+
+%Occupancy threshold above which positions are included in the place field
+%estimate
+params.occ_th = 0;
+
+%Minimal number of spikes to consider a cell
+params.nspk_th = 0;
+
+%Number of shuffle controls to perform for randomization
+params.nShuffle = 100;
+
+%Number of folds to consider for cross-validation
+params.kfold = 10;
+
+end

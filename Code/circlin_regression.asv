@@ -1,0 +1,41 @@
+function [s ,phi0 ,rho ,pval] = circlin_regression(X, Phi)
+%Calculates circular-linear coefficient between linear variable X and
+%circular variable Phi (in radians).
+
+valididx = ~isnan(X) & ~isnan(Phi);
+X = X(valididx);
+nresol = 3601;
+R = NaN(nresol,1);
+A = linspace(-2,2,nresol);%*2*pi;
+for i = 1:numel(A)
+    a = A(i);
+    R(i) = sqrt((sum(cos(Phi - 2*pi*a*X)))^2 + (sum(sin(Phi - a*X)))^2);
+end
+
+[~,imax] = max(R);
+s = A(imax);
+
+phi0_num = sum(sin(Phi - 2*pi*s*X));
+phi0_den = sum(cos(Phi - 2*pi*s*X));
+phi0 = atan2(phi0_num,phi0_den);
+
+theta = mod(2*pi*abs(s)*X, 2*pi);
+theta_num = sum(sin(theta));
+theta_den = sum(cos(theta));
+theta_bar = atan2(theta_num,theta_den);
+
+Phi_num = sum(sin(Phi));
+Phi_den = sum(cos(Phi));
+Phi_bar = atan2(Phi_num,Phi_den);
+
+rho_num = sum(sin(Phi - Phi_bar).*sin(theta - theta_bar));
+rho_den = sqrt(sum(sin(Phi - Phi_bar).^2)*sum(sin(theta - theta_bar).^2));
+rho = rho_num/rho_den;
+
+lambda22 = 1/n * sum((sin(Phi - Phi_bar).^2).*(sin(theta - theta_bar).^2));
+lambda02 = 1/n * sum((sin(Phi - Phi_bar).^0).*(sin(theta - theta_bar).^2));
+lambda20 = 1/n * sum((sin(Phi - Phi_bar).^2).*(sin(theta - theta_bar).^0));
+z = rho * sqrt(n * (lambda02 * lambda20) / lambda22);
+
+pval = 1 - erf(abs(z)/sqrt(2));
+end

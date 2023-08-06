@@ -1,0 +1,18 @@
+function map = Compute2DMap(Xd, Yd, Z, nbins)
+%Compute 2D map efficiently. Xd is the binned independent varaible and Z is
+%the dependent variable.
+
+%Selecting valid indices
+valididx = ~isnan(Xd) & ~isnan(Yd);
+Xd = Xd(valididx);
+Yd = Yd(valididx);
+Z = Z(valididx);
+
+%Summing Z within indices of Xd.
+map = sparse(ones(size(Xd)), Xd, Z, 1, nbins);
+
+%Converting into a full matrix again for accessing elements more
+%conveniently
+map = full(map);
+
+end
