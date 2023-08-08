@@ -1,11 +1,14 @@
 function GLMs = GLMAnalyses(Nav, Srep, glmsparams)
-% GLMAnalyses Estimates tuning curves to position and running speed using a Poisson GLM model.
+%GLMAnalyses Estimates tuning curves to position and running speed using a Poisson GLM model.
 %
 %   GLMs = GLMAnalyses(Nav, Srep, glmsparams) performs GLM analysis on responses
-%   in Srep to estimate tuning curves for position and running speed. It assumes
-%   a Poisson distribution. Different models are compared
-%   (position-only, speed-only, position x speed) using log likelihood ratio tests
-%   to determine the best model for each cell.
+%   in Srep to estimate tuning curves for position and running speed. It assumes 
+%   a Poisson distribution. Different models
+%   (position-only, speed-only, position x speed) using log likelihood ratio tests and determines
+%   the best model for each cell.
+%   GLMAnalyses estimates tuning curves for position and running speed using a Poisson GLM model.
+%   It performs model comparison based on log likelihood ratio tests and selects the best model
+%   for each cell. The selected tuning curves and model information are stored in the output structure.
 %
 % Inputs:
 %   Nav: Structure containing navigation-related data (e.g., spatial positions, speeds)
@@ -24,6 +27,7 @@ function GLMs = GLMAnalyses(Nav, Srep, glmsparams)
 %         - LLH_cst: Log likelihood value for the constant mean model
 %         - Xbincenters: Centers of position bins for plotting
 %         - Spdbincenters: Centers of speed bins for plotting
+%
 %
 % Example usage:
 %   glmsparams = DefineGLMsParams(Nav, Spk);
@@ -70,10 +74,10 @@ options.thresh = glmsparams.thresh;
 
 %Subset of time indices over which GLMs will be computed
 tidx = ismember(Nav.Condition, glmsparams.condition) &...
-    ismember(Nav.XDir, glmsparams.dir) &...
-    Nav.Spd >= glmsparams.spdthreshold &...
-    ~isnan(Nav.Xpos);
-
+       ismember(Nav.XDir, glmsparams.dir) &...
+       Nav.Spd >= glmsparams.spdthreshold &...
+       ~isnan(Nav.Xpos);
+          
 %Selecting time and cell indices over which to compute tuning curves
 if islogical(glmsparams.cellidx)
     cellidx = find(glmsparams.cellidx(:)' & sum(Srep(tidx,:), 1, 'omitnan') > glmsparams.nspk_th);
@@ -131,10 +135,10 @@ end
 
 %%
 %Computing position tuning curves with glmnet for the position-only model.
-%Quick technical detail: Since glmnet in matlab doesn't automatically
-%include lambda = 0 in the regularization path, we have to do it manually
+%Quick technical detail: Since glmnet in matlab doesn't automatically 
+%include lambda = 0 in the regularization path, we have to do it manually 
 %by calling glmnet twice so that we use the regularization path defined by
-%glmnet (glmnet is a bit sensitive to the set of lambda values used in the
+%glmnet (glmnet is a bit sensitive to the set of lambda values used in the 
 %regularization path).
 mapX = NaN(ncells, nXbins);
 LLH_X = NaN(ncells, 1);
@@ -143,7 +147,7 @@ for icell = 1:ncells
     %path
     options.lambda = [];
     gfit = glmnet(Xmat, spikeTrain(:,icell), family, options);
-
+    
     %Calling glmnet again after adding lambda = 0 as an additional
     %regularization value.
     options.lambda = [gfit.lambda ; 0];
@@ -199,10 +203,10 @@ for icell = 1:ncells
 
     %Computing the log likelihood of the fitted data under the model
     LLH_S(icell) = computeLLH_poisson(spikeTrain(:,icell), yfit);
-
+    
     %Getting speed tuning curve with no regularization
     mapS(icell,validSpd) = 1 / glmsparams.scalingFactor * exp(gfit.a0(end) + gfit.beta(:,end));
-
+    
     %Smoothing the tuning curve with a Gaussian
     mapS(icell,:) = GaussianSmooth1D(mapS(icell,:), glmsparams.SpdsmthNbins);
 end
@@ -237,19 +241,19 @@ for icell = 1:ncells
     %Alternatively, we could call the glmnetPredict function to get the
     %reconstructed response.
     %yfit = glmnetPredict(gfit, XSmat, 0, 'response');
-
+    
     %Computing the log likelihood of the fitted data under the model
     LLH_XS(icell) = computeLLH_poisson(spikeTrain(:,icell), yfit);
-
+    
     %Getting the position ansd speed tuning curves with no regularization.
     %To get curves equivalent to tuning curves, we marginalize out the
     %effect of other variables by adding their mean to the tuning curve
-    %coefficients. Then because it is a Poisson distribution that we're
+    %coefficients. Then because it is a Poisson distribution that we're 
     %using we need to invert the log link function (taking the exponential)
     %and we convert it to spike / s by multiplying with the sampling rate.
     mapXS_X(icell,validXpos) = 1 / glmsparams.scalingFactor * exp(gfit.a0(end) + gfit.beta(Xidx,end) + mean(gfit.beta(Sidx,end)));
     mapXS_S(icell,validSpd) = 1 / glmsparams.scalingFactor * exp(gfit.a0(end) + gfit.beta(Sidx,end) + mean(gfit.beta(Xidx,end)));
-
+    
     %Smoothing the tuning curves with a Gaussian
     mapXS_X(icell,:) = GaussianSmooth1D(mapXS_X(icell,:), glmsparams.XsmthNbins);
     mapXS_S(icell,:) = GaussianSmooth1D(mapXS_S(icell,:), glmsparams.SpdsmthNbins);
@@ -285,12 +289,12 @@ if sum(bestXcellidx) > 0
     %significance of adding position to fit the cell response.
     dof = nvalidXpos;
     [~, pval_X(bestXcellidx)] = lratiotest(LLH_X(bestXcellidx), LLH_cst(bestXcellidx), dof);
-
+    
     %Comparing position-only model to the full model to get the
     %significance of adding speed to the position-only model.
     dof = (1 + nvalidXpos + nvalidSpd) - (1 + nvalidXpos);
     [~, pval_S(bestXcellidx)] = lratiotest(LLH_XS(bestXcellidx), LLH_X(bestXcellidx), dof);
-
+    
     %If adding speed leads to a significant improvement of the model, we
     %consider the full model as the best model.
     bestmodel(bestXcellidx & pval_S <= glmsparams.pval_th) = 3;
@@ -312,12 +316,12 @@ if sum(bestScellidx) > 0
     %significance of adding speed to fit the cell response.
     dof = nvalidSpd;
     [~, pval_S(bestScellidx)] = lratiotest(LLH_S(bestScellidx), LLH_cst(bestScellidx), dof);
-
+    
     %Comparing speed-only model to the full model to get the
     %significance of adding position to the speed-only model.
     dof = (1 + nvalidXpos + nvalidSpd) - (1 + nvalidSpd);
     [~, pval_X(bestScellidx)] = lratiotest(LLH_XS(bestScellidx), LLH_S(bestScellidx), dof);
-
+    
     %If adding position leads to a significant improvement of the model, we
     %consider the full model as the best model.
     bestmodel(bestScellidx & pval_X <= glmsparams.pval_th) = 3;

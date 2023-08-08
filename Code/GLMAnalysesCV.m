@@ -1,11 +1,47 @@
 function GLMs = GLMAnalysesCV(Nav, Srep, glmsparams)
-%Estimates tuning curves to position and running speed using a Poisson GLM
-%model. Ideally, the model comparison should be done on cross-validated
-%data; however, the procedure for fitting GLMs takes too long to perform it
-%over kfold. Therefore, we'll do it here by comparing the likelihood of 
-%fitted data rather than cross-validated data. (Maybe we should do it
-%offline and provide the GLM output structure computed beforehand before
-%looking at the results).
+% Estimates tuning curves to position and running speed using a Poisson GLM
+% model. Model comparison is performed by comparing the likelihood of fitted
+% data. This function computes GLMs for position-only, speed-only, and
+% position x speed models, performs k-fold cross-validation, and evaluates
+% model significance.
+%
+% Inputs:
+%   Nav: Navigation data structure containing information about conditions,
+%        positions and running speeds.
+%   Srep: Responses, array where rows correspond to time bins and
+%         columns correspond to cells. Each element represents the activity
+%         of a cell in a time bin.
+%   glmsparams: Structure containing GLM analysis parameters
+%
+% Outputs:
+%   GLMs: Output structure containing the results and analysis of the GLM.
+%       - glmsparams: Input parameters for the GLM analysis.
+%       - Xbincenters: Bin centers for position tuning curves.
+%       - Spdbincenters: Bin centers for speed tuning curves.
+%       - mapX: Position tuning curves for selected cells.
+%       - mapXcv: Cross-validated position tuning curves.
+%       - mapS: Speed tuning curves for selected cells.
+%       - mapScv: Cross-validated speed tuning curves.
+%       - pval_X: P-values indicating significance of adding position to the model.
+%       - pval_S: P-values indicating significance of adding speed to the model.
+%       - bestmodel: Best model indicator for each cell (0 for constant mean,
+%         1 for position, 2 for speed, 3 for position x speed).
+%       - LLH: Log likelihood values for different models (position, speed,
+%         position x speed) for each cell.
+%       - LLH_cst: Log likelihood values for constant mean model for each cell.
+%       - mapX_SE: Standard error estimates for position tuning curves based on
+%         k-fold cross-validation.
+%       - tidx: Logical array indicating time indices used for analysis.
+%       - ncells_orig: Number of original cells before cell selection.
+%
+% Example usage:
+%   glmsparams = DefineGLMsParams(Nav, Spk);
+%   GLMs = GLMAnalysesCV(Nav, Srep, glmsparams);
+%
+% See also: glmnet, crossvalPartition, GaussianSmooth1D, computeLLH_poisson
+%
+% written by J.Fournier 08/2023 for the iBio Summer school
+
 
 %%
 %options for glmnet
