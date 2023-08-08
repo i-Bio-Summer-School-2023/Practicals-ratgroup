@@ -1,7 +1,22 @@
 function cv = crossvalPartition(n, kfold)
-%Creates a partition of 1:n indices into k-fold.
+% cv = crossvalPartition(n, kfold) returns a struct cv containing k-fold cross-validation
+% partition sets.
+%
+% INPUTS:
+% - n: Total number of data points.
+% - kfold: Number of folds for cross-validation.
+%
+% OUTPUT:
+% - cv: Struct with fields trainsets and testsets, each containing kfold cell arrays
+%   defining the training and testing indices for each fold.
+%
+% USAGE:
+% cv = crossvalPartition(n, kfold);
+%
+%
+% Written by J.Fournier 08/2023 for the iBio Summer school
 
-
+%%
 cv.trainsets = cell(1,kfold);
 cv.testsets = cell(1,kfold);
 

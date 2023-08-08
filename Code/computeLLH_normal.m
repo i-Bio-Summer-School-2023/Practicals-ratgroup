@@ -1,9 +1,27 @@
 function [LLH, BIC, AIC] = computeLLH_normal(y, ypred, k)
-%Compute the log likelihood for a Gaussian model. y is the original signal;
-%ypred, the model prediction and k is the total number of model parameters.
-%k is only necessary if the Bayesian Information Criterion and Akaike
-%Information Criterion are required.
-
+% computeLLH_normal Compute log likelihood, Bayesian Information Criterion (BIC),
+% and Akaike Information Criterion (AIC) for a Gaussian model.
+%
+% [LLH, BIC, AIC] = computeLLH_normal(y, ypred, k) computes the log likelihood (LLH)
+% for a Gaussian model given the original signal (y) and its model prediction (ypred).
+% The total number of model parameters (k) is optionally provided for calculating BIC and AIC.
+%
+% INPUTS:
+% - y: Original signal.
+% - ypred: Model prediction.
+% - k: Total number of model parameters (optional for BIC and AIC).
+%
+% OUTPUTS:
+% - LLH: Log likelihood of the Gaussian model.
+% - BIC: Bayesian Information Criterion.
+% - AIC: Akaike Information Criterion.
+%
+% USAGE:
+% [LLH, BIC, AIC] = computeLLH_normal(y, ypred, k);
+%
+%
+% Written by J.Fournier 08/2023 for the iBio Summer school
+%%
 %std of the model
 s = nanstd((y - ypred), 1);
 %probability density function for a normal distribution with std = s.

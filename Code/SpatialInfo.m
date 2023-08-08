@@ -1,6 +1,22 @@
 function SInfoperspike = SpatialInfo(t, o)
-%Computes the spatial information in tuning curve t, considering an
-%occupancy o. This is returned in bits per spike.
+% SpatialInfo computes the spatial information in a tuning curve.
+%
+% SInfoperspike = SpatialInfo(t, o) computes the spatial information in a tuning curve t,
+% considering an occupancy o. The result is returned in bits per spike.
+%
+% INPUTS:
+% - t: Tuning curve (often representing firing rates).
+% - o: Occupancy map corresponding to the tuning curve.
+%
+% OUTPUT:
+% - SInfoperspike: Spatial information in bits per spike.
+%
+% USAGE:
+% SInfoperspike = SpatialInfo(t, o);
+%
+%
+% Written by J.Fournier 08/2023 for the iBio Summer school
+
 
 %Mean rate of the cell
 meanRate = nansum(t(:) .* o(:) / nansum(o(:)));
