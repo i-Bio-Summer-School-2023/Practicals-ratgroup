@@ -1,20 +1,28 @@
 function output = GaussianSmooth1D(input, smthNbins)
-% output = GaussianSmooth1D(input, smthNbins)
+% GaussianSmooth1D - Smooth a 1D vector with a Gaussian kernel.
 %
-% Smooth a 1D vector with a gaussian.
+%   output = GaussianSmooth1D(input, smthNbins)
+%   GaussianSmooth1D function applies Gaussian smoothing to a 1D input array using a
+%   Gaussian kernel.
 %
-% INPUT:
-% - input : 1D array to be smoothed.
-% - smthNbins: s.d. of the Gaussian.
+%   INPUTS:
+%   input:      1D array to be smoothed.
+%   smthNbins:  Standard deviation of the Gaussian kernel.
 % 
-% OUTPUT:
-% - output: smoothed 1D array of the same size as input.
+%   OUTPUT:
+%   output:     Smoothed 1D array of the same size as the input.
 %
-% USAGE:
-% output = GaussianSmooth1D(input, smthNbins);
+%   USAGE:
+%   output = GaussianSmooth1D(input, smthNbins);
 %
-% J Fournier 07/2023
+%
+%   SEE ALSO:
+%   GaussianSmooth, Compute1DMap, Compute2DMap, MapsAnalyses1D,
+%   MapsAnalyses2D
+%
+%   Written by J. Fournier in August 2023 for the iBio Summer School.
 
+%%
 %Saving sise of input to reshape it at the end
 sz = size(input);
 input = input(:);

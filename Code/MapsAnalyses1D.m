@@ -1,6 +1,52 @@
-function Maps = MapsAnalyses(Nav, Srep, mapsparams)
-%Estimates place fields and their significance either by shuffling or by
-%model comparison on cross-validated predictions
+function Maps = MapsAnalyses1D(Nav, Srep, mapsparams)
+% Maps = MapsAnalyses1D(Nav, Srep, mapsparams) computes place fields and their significance
+% either through shuffling or model comparison on cross-validated predictions in a
+% one-dimensional spatial context.
+%
+% Input:
+%   - Nav: Struct containing navigation-related data variables on which
+%   responses should be mapped onto
+%   Srep - ntime x ncells array of responses to map.
+%   mapsparams - Structure containing parameters for place field estimation.
+%
+% Output:
+%   Maps - Structure containing various results of the place field analysis, including:
+%     - mapX: Place fields, a nCells x nXbin array.
+%     - mapX_cv: Place fields estimated using k-fold cross-validation.
+%     - mapX_SE: Jacknife estimate of the standard error for place fields.
+%     - mapsparams: Parameters used for place field estimation.
+%     - Xbincenters: Bin centers along the X-axis.
+%     - occmap: Occupancy map, a 1 x nXbins arrays (scaled by
+%       mapsparams.scalingFactor)
+%     - SI: Spatial information for each cell.
+%     - SparsityIndex: Sparsity index for each cell.
+%     - SelectivityIndex: Selectivity index for each cell.
+%     - SI_pval: P-values for spatial information significance, based on
+%       shuffle controls
+%     - SparsityIndex_pval: P-values for sparsity index significance, based on
+%       shuffle controls
+%     - SelectivityIndex_pval: P-values for selectivity index significance, based on
+%       shuffle controls
+%     - EV: cross-validated percentage of explained variance using place field model.
+%     - EV_cst: cross-validated percentage of explained variance using constant mean model.
+%     - LLH: cross-validated Log likelihood using place field model.
+%     - LLH_cst: cross-validated Log likelihood using constant mean model.
+%     - LLH_pval: P-values for model comparison using likelihood ratio test
+%
+% Usage example:
+%    Nav = LoaddataNav(loadparams);
+%    Spk = LoaddataSpk(loadparams, Nav.sampleTimes);
+%    Srep = Spk.spikeTrain;
+%    mapsparams = DefineMapsParams(Nav,Spk);
+%    Maps1D = MapsAnalyses1D(Nav, Spk.spikeTrain, mapsparams);
+%
+% See also: Compute1DMap, GaussianSmooth1D, crossvalPartition, computeEV,
+%   computeLLH_normal, lratiotest
+%
+% written by J.Fournier 08/2023 for the iBio Summer school
+%
+% Note: This function provides place field analysis for a one-dimensional environment.
+% For 2-dimensional analyses, consider using appropriate MapsAnalyses2D.
 
 %%
 if isempty(mapsparams.Xvariablename)

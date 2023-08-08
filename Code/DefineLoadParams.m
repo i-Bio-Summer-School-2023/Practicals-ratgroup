@@ -3,10 +3,13 @@ function loadparams = DefineLoadParams(datadirpath)
 %
 %INTPUT: 
 % - datadirpath: path to the directory where data are stored. Default to
-%   '/ Matlab Drive / Data' if not provided.
+%   '/ Matlab Drive / School / Data' if not provided.
 %
 %OUTPUT:
-% A structure with the following fields:
+% - loadparams: a structure whose fields contain paramters required to call
+% LoaddataNav, LoaddataSpk and LoaddataLfp.
+%
+% Fields of loadparams are the following:
 % - animalname: name of the animal.
 %
 % - sessionID: number identiying the session to load.
@@ -68,7 +71,7 @@ function loadparams = DefineLoadParams(datadirpath)
 % Usage:   
 % loadparams = DefineLoadParams(datadirpath)
 %
-% written by J.Fournier 07/2023.
+% written by J.Fournier 08/2023 for the iBio Summer school
 
 %animal name and session ID
 loadparams.animalname = 'Rat08';
@@ -78,7 +81,7 @@ loadparams.session = 20130713;
 if nargin == 1
     loadparams.Datafolder = datadirpath;
 else
-    loadparams.Datafolder = [filesep 'MATLAB Drive' filesep 'Dataset' filesep 'Session1'];
+    loadparams.Datafolder = [filesep 'MATLAB Drive' filesep 'School' filesep 'Dataset' filesep 'Session1'];
 end
 
 if contains(loadparams.Datafolder,'MATLAB Drive')

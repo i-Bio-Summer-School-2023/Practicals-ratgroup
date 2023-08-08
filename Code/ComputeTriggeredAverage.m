@@ -20,7 +20,7 @@ function [m, sd, r] = ComputeTriggeredAverage(R, S, idxwin, w)
 % USAGE:
 % [m, sd, r] = ComputeTriggeredAverage(R, S, idxwin, [w]);
 %
-% J. Fournier 07 / 2023
+% written by J.Fournier 08/2023 for the iBio Summer school
 
 if nargin < 4
     w = ones(size(S));

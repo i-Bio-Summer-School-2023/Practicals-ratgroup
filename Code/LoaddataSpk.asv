@@ -22,9 +22,6 @@ function Spk = LoaddataSpk(loadparams, sampleTimes)
 %
 % - spikeID: cluster IDs of spikes in spikeTimes
 %
-% - spikeTrain: a nTimes x nCells array of spike counts in bins centered
-% around sample times of Spk.sampleTimes
-%
 % - shankID: 1 x nCells array of ID of the shank where each cluster was 
 % recorded
 %
@@ -34,17 +31,10 @@ function Spk = LoaddataSpk(loadparams, sampleTimes)
 % - IntCell: 1 x nCells logical array. true if the cluster is a putative
 % interneuron
 %
-% - ripple: ntimes x 1 array with ones wherever there is a ripple.
-%
-% - ripplepeak: ntimes x 1 array with ones for ripple peaks.
-%
-% - rippleTimes: timestamps of the detected ripple peaks (in seconds)
-%
-% USAGE:
-%  Spk = LoaddataSpk(loadparams, sampleTimes)
-%
-%
-% written by J.Fournier 08/2023 for the iBio Summer school
+% - ripple:
+% - ripplepeak:
+% - 
+ spikeTrain ripple ripplepeak rippleTimes shankID PyrCell IntCell
 
 %%
 %loading spike times and cluster ID from the prepared .mat file
