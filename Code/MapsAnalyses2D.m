@@ -1,57 +1,57 @@
 function Maps = MapsAnalyses2D(Nav, Srep, mapsparams)
-MapsAnalyses2D - Estimates two-dimensional place fields and their significance.
-
-  Maps = MapsAnalyses2D(Nav, Srep, mapsparams)
-
-  This function estimates two-dimensional maps and their significance
-  using either shuffling or model comparison on cross-validated predictions.
-
-  Inputs:
-  - Nav: Struct containing navigation-related data variables on which
-  responses should be mapped onto
-  - Srep: array of responses (ntimes x ncells)
-  - mapsparams: Struct containing parameters for place field estimation.
-
-  Outputs:
-  - Maps: Struct containing place field analysis results, including fields such as:
-    * mapXY: Two-dimensional place fields
-    * mapXY_cv: Two-dimensional place fields estimated using k-fold cross-validation
-    * mapXY_SE: Jackknife estimate of standard error for place fields
-    * mapsparams: Parameters used for analysis
-    * Xbincenters: Bin centers along X-axis
-    * Ybincenters: Bin centers along Y-axis
-    * occmap: Occupancy map, a 1 x nXbins arrays (scaled by
-      mapsparams.scalingFactor)
-    * SI: Spatial information
-    * SparsityIndex: Sparsity index for each cell.
-    * SelectivityIndex: Selectivity index for each cell.
-    * DirectionalityIndex: Directionality index for each cell.
-    * SI_pval: P-values for spatial information, based on
-      shuffle controls
-    * SparsityIndex_pval: P-values for sparsity index, based on
-      shuffle controls
-    * SelectivityIndex_pval: P-values for selectivity index, based on
-      shuffle controls
-    * DirectionalityIndex_pval: P-values for directionality index, based on
-      shuffle controls
-    * EV: cross-validated percentage of explained variance from place field model
-    * EV_cst: cross-validated percentage of explained variance from constant mean model
-    * LLH: cross-validated Log likelihood from place field model
-    * LLH_cst: cross-validated Log likelihood from constant mean model
-    * LLH_pval: P-values  for model comparison from likelihood ratio test
-
-  Usage:
-   Nav = LoaddataNav(loadparams);
-   Spk = LoaddataSpk(loadparams, Nav.sampleTimes);
-   Srep = Spk.spikeTrain;
-   mapsparams = DefineMapsParams(Nav,Spk);
-   Maps2D = MapsAnalyses2D(Nav, Spk.spikeTrain, mapsparams);
-
-See also: Compute2DMap, GaussianSmooth, computeEV, computeLLH_normal,
-          crossvalPartition, SpatialInfo, FieldSparsity, FieldSelectivity,
-          FieldDirectionality, lratiotest
-
-written by J.Fournier 08/2023 for the iBio Summer school
+% MapsAnalyses2D - Estimates two-dimensional place fields and their significance.
+% 
+%   Maps = MapsAnalyses2D(Nav, Srep, mapsparams)
+% 
+%   This function estimates two-dimensional maps and their significance
+%   using either shuffling or model comparison on cross-validated predictions.
+% 
+%   Inputs:
+%   - Nav: Struct containing navigation-related data variables on which
+%   responses should be mapped onto
+%   - Srep: array of responses (ntimes x ncells)
+%   - mapsparams: Struct containing parameters for place field estimation.
+% 
+%   Outputs:
+%   - Maps: Struct containing place field analysis results, including fields such as:
+%     * mapXY: Two-dimensional place fields
+%     * mapXY_cv: Two-dimensional place fields estimated using k-fold cross-validation
+%     * mapXY_SE: Jackknife estimate of standard error for place fields
+%     * mapsparams: Parameters used for analysis
+%     * Xbincenters: Bin centers along X-axis
+%     * Ybincenters: Bin centers along Y-axis
+%     * occmap: Occupancy map, a 1 x nXbins arrays (scaled by
+%       mapsparams.scalingFactor)
+%     * SI: Spatial information
+%     * SparsityIndex: Sparsity index for each cell.
+%     * SelectivityIndex: Selectivity index for each cell.
+%     * DirectionalityIndex: Directionality index for each cell.
+%     * SI_pval: P-values for spatial information, based on
+%       shuffle controls
+%     * SparsityIndex_pval: P-values for sparsity index, based on
+%       shuffle controls
+%     * SelectivityIndex_pval: P-values for selectivity index, based on
+%       shuffle controls
+%     * DirectionalityIndex_pval: P-values for directionality index, based on
+%       shuffle controls
+%     * EV: cross-validated percentage of explained variance from place field model
+%     * EV_cst: cross-validated percentage of explained variance from constant mean model
+%     * LLH: cross-validated Log likelihood from place field model
+%     * LLH_cst: cross-validated Log likelihood from constant mean model
+%     * LLH_pval: P-values  for model comparison from likelihood ratio test
+% 
+%   Usage:
+%    Nav = LoaddataNav(loadparams);
+%    Spk = LoaddataSpk(loadparams, Nav.sampleTimes);
+%    Srep = Spk.spikeTrain;
+%    mapsparams = DefineMapsParams(Nav,Spk);
+%    Maps2D = MapsAnalyses2D(Nav, Spk.spikeTrain, mapsparams);
+% 
+% See also: Compute2DMap, GaussianSmooth, computeEV, computeLLH_normal,
+%           crossvalPartition, SpatialInfo, FieldSparsity, FieldSelectivity,
+%           FieldDirectionality, lratiotest
+% 
+% written by J.Fournier 08/2023 for the iBio Summer school
 %
 
 %%
