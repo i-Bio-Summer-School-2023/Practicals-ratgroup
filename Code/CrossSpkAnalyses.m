@@ -174,6 +174,7 @@ bestlag = lagbins(I);
 bestlag(isnan(m)) = NaN;
 
 %%
+%Returning results in the output structure
 crossparams.tidx = tidx;
 Cross.crossparams = crossparams;
 Cross.lagbins = lagbins;
@@ -185,16 +186,19 @@ Cross.ccSig = NaN(ncells_orig, ncells_orig, nlagbins);
 Cross.ccNoise = NaN(ncells_orig, ncells_orig, nlagbins);
 Cross.ccShf = NaN(ncells_orig, ncells_orig, nlagbins);
 Cross.ccShfSD = NaN(ncells_orig, ncells_orig, nlagbins);
-Cross.pval = NaN(ncells_orig, 1);
-Cross
+Cross.pval = NaN(ncells_orig, ncells_orig);
+Cross.bestcc = NaN(ncells_orig, ncells_orig);
+Cross.bestlag = NaN(ncells_orig, ncells_orig);
+
 for i = 1:ncells
     for j = 1:ncells
         Cross.ccSig(cellidx(i),cellidx(j),:) = ccSig(i,j,:);
         Cross.ccNoise(cellidx(i),cellidx(j),:) = ccNoise(i,j,:);
         Cross.ccShf(cellidx(i),cellidx(j),:) = ccShf(i,j,:);
         Cross.ccShfSD(cellidx(i),cellidx(j),:) = ccShfSD(i,j,:);
+        Cross.pval(cellidx(i),cellidx(j)) = pval(i,j);
+        Cross.bestcc(cellidx(i),cellidx(j)) = bestcc(i,j);
+        Cross.bestlag(cellidx(i),cellidx(j)) = bestlag(i,j);
     end
 end
-Cross.pval(cellidx) = pval;
-
 end

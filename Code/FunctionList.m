@@ -38,8 +38,8 @@ PatDec = DecodingAnalysis(Nav, Pat.activation, decpattparams);
 PatDecXLR = DecodingAnalysis2(Nav, Pat.activation, decpattparams);
 
 %Day4
-crossparams = DefineCrossParams(Nav,Spk);%define parameters for correlation analysis
-Cross = CrossCorrelationAnalyses(Nav, Spk.spikeTrain, crossparams);%Compute pair-wise correlations
+crossparams = DefineCrossSpkParams(Nav,Spk);%define parameters for correlation analysis
+Cross = CrossSpkAnalyses(Nav, Spk.spikeTrain, crossparams);%Compute pair-wise correlations
 TFparams = DefinelfpTFparams(Nav, Spk, Lfp);%Define parameters for time frequency analyses
 TFlfp = TimeFreqAnalysis(Nav, Spk, Lfp, TFparams);%wavelet transform and coherence
 thetaparams = DefineThetaParams(Nav,Spk);%Parameters related to theta modulation and precession
