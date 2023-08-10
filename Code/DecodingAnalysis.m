@@ -1,10 +1,59 @@
 function Dec = DecodingAnalysis(Nav, Srep, decparams)
-%Decoding spatial positions from a set of neuron's spike trains. 
-
+% Dec = DecodingAnalysis(Nav, Srep, decparams)
+% Decoding up to two behavioral variables from a set of neuron's spike 
+% trains using 2D spatial maps.
+%
+%
+% Inputs:
+%   Nav: Structure containing dependent variables (X and Y).
+%   Srep: Spike train data for each neuron (timepoints x neurons).
+%   decparams: Structure with decoding parameters. See DefineDecParams.
+%
+% Outputs:
+%   Dec: Structure containing decoding results, with the following fields:
+%   - traintidx: Logical indices of data points used for training.
+%   - Xbincenters: Centers of the X bins.
+%   - nXbins: Number of X bins.
+%   - Ybincenters: Centers of the Y bins.
+%   - nYbins: Number of Y bins.
+%   - mapXY: Place field maps for each cell (ncells x nXbins x nYbins).
+%   - mapXY_cv: Cross-validated place field maps (ncells x nXbins x nYbins x k-fold).
+%   - occmap: Occupancy map used for decoding.
+%   - X: Discretized X values.
+%   - Y: Discretized Y values.
+%   - XDecMax: Decoded X using the maximum a posteriori.
+%   - YDecMax: Decoded Y using the maximum a posteriori.
+%   - XDecMean: Decoded X using the expectancy of the posterior.
+%   - YDecMean: Decoded Y using the expectancy of the posterior.
+%   - XErrMax: Decoding error for X using maximum a posteriori.
+%   - YErrMax: Decoding error for Y using maximum likelihood.
+%   - XErrMean: Decoding error for X using the expectancy of the posterior.
+%   - YErrMean: Decoding error for Y using the expectancy of the posterior.
+%   - Xdecmat: Confusion matrix for X over the training set.
+%   - Ydecmat: Confusion matrix for Y over training set variables.
+%
+%
+% Usage:
+%   Dec = DecodingAnalysis(Nav, Srep, decparams)
+%
+% See Also:
+%   ComputeBayesMAP2D, crossvalPartition, GaussianSmooth, Compute2DMap
+%
+% Written by J. Fournier in 08/2023 for the iBio Summer school.
 %%
 
 if isempty(decparams.Xvariablename)
-    decparams.Xvariablename = 'Xpos';
+    decparams.Xvariablename = 'X';
+end
+X = Nav.(decparams.Xvariablename);
+
+%If no Y variable are indicated, we'll just compute a 1D place field
+if ~isempty(decparams.Yvariablename)
+    Y = Nav.(decparams.Yvariablename);
+else
+    Y = ones(size(X));
+    decparams.Ybinedges = 1;
+    decparams.YsmthNbins = 0;
 end
 
 %Smoothing the spike train over the decoding window to get spike counts
@@ -18,8 +67,10 @@ end
 traintidx = ismember(Nav.Condition, decparams.condition) &...
             ismember(Nav.XDir, decparams.dir) &...
             Nav.Spd > decparams.spdthreshold &...
-            ~isnan(Nav.(decparams.Xvariablename));
-               
+            X >= decparams.Xbinedges(1) & X <= decparams.Xbinedges(end) &...
+            Y >= decparams.Ybinedges(1) & Y <= decparams.Ybinedges(end) &...
+            ~isnan(X) & ~isnan(Y);
+
 %Selecting cell indices over which to compute place fields
 if islogical(decparams.cellidx)
     cellidx = find(decparams.cellidx(:)' & sum(Srep(traintidx,:), 1, 'omitnan') > decparams.nspk_th);
@@ -31,62 +82,65 @@ end
 spikeTrain = Srep(:,cellidx);
 spkCount = spkCount(:,cellidx);
 
-X = Nav.X;
-
 %number of cells selected for decoding
-ncells = size(spkCount, 2);
+ncells = size(spikeTrain, 2);
 
-%number of position bins
-nbins = numel(decparams.Xbinedges) - 1;
+%number of X bins
+nXbins = max(1, numel(decparams.Xbinedges) - 1);
+
+%number of Y bins
+nYbins = max(1, numel(decparams.Ybinedges) - 1);
 
 %%
-%Discretizing X vectors according to decparams.Xbinedges
+%Discretizing X according to decparams.Xbinedges
 X_discrete = discretize(X, decparams.Xbinedges);
 
+%Discretizing Y according to decparams.Ybinedges.
+Y_discrete = discretize(Y, decparams.Ybinedges);
+
 %%
+%Subsetting X_discrete, Y_discrete and spikeTrain on the training set
 X_discrete_trainset = X_discrete(traintidx);
+Y_discrete_trainset = Y_discrete(traintidx);
 spkTrain_trainset = spikeTrain(traintidx,:);
+
 %Computing occupancy map (same for all cells) on the train set
 flat = decparams.scalingFactor * ones(size(X_discrete_trainset));
-occmap = Compute1DMap(X_discrete_trainset, flat, nbins);
+occmap = Compute2DMap(X_discrete_trainset, Y_discrete_trainset, flat, nXbins, nYbins);
 
-%Removing occupancy for positions below the occupancy threshold
+%Removing occupancy for position bins below the occupancy threshold
 occmap(occmap <= decparams.occ_th) = NaN;
 
-%Smoothing the occupancy map with a gaussian window (decparams.smthNbins
-%of sd)
-occmap = GaussianSmooth1D(occmap, decparams.XsmthNbins);
+%Smoothing the occupancy map with a 2D gaussian window.
+occmap = GaussianSmooth(occmap, [decparams.YsmthNbins decparams.XsmthNbins]);
 
-
-%Computing and smoothing spike count map for each cell
-scmap = NaN(ncells, nbins);
+%Computing and smoothing the spike count map for each cell
+scmap = NaN(ncells, nYbins, nXbins);
 for icell = 1:ncells
-    scmap(icell,:) = Compute1DMap(X_discrete_trainset, spkTrain_trainset(:,icell), nbins);
-    scmap(icell,isnan(occmap)) = NaN;
-    scmap(icell,:) = GaussianSmooth1D(scmap(icell,:), decparams.XsmthNbins);
+    scmapcell = Compute2DMap(X_discrete_trainset, Y_discrete_trainset, spkTrain_trainset(:,icell), nXbins, nYbins);
+    scmapcell(isnan(occmap)) = NaN;
+    scmapcell = GaussianSmooth(scmapcell, [decparams.YsmthNbins decparams.XsmthNbins]);
+    scmap(icell,:,:) = scmapcell;
 end
 
-%Calculating the place field maps by dividing scmap and occmap
-mapX = scmap ./ occmap;
+%Calculating the place field x direction maps by dividing scmap and occmap
+mapXY = scmap ./ permute(occmap, [3 1 2]);
 
 %%
-%Computing decoded positions for the entire data set.
-[DecMax, DecMean] = ComputeBayesMAP(mapX, spkCount, decparams.dectimewin);
-
-%%
-%Actually, place fields computed on the train set are over-fitting the data
-%so decoding is valid only for data points not included in the train set.
-
 %number of data points
 ntimepts = size(spkCount, 1);
 
-%Filling in decoded position for time bins that were not included in the
+%Initializing decoded variables
+XDecMax = NaN(ntimepts,1);
+YDecMax = NaN(ntimepts,1);
+XDecMean = NaN(ntimepts,1);
+YDecMean = NaN(ntimepts,1);
+%Computing decoded positions for data points that are not included in the
 %train set.
-DecMax_full = NaN(ntimepts,1);
-DecMean_full = NaN(ntimepts,1);
-DecMax_full(~traintidx) = DecMax(~traintidx);
-DecMean_full(~traintidx) = DecMean(~traintidx);
+[XDecMax(~traintidx), YDecMax(~traintidx), XDecMean(~traintidx), YDecMean(~traintidx)] = ...
+    ComputeBayesMAP2D(mapXY, spkCount(~traintidx,:), decparams.dectimewin);
 
+%%
 %Doing the same thing now with cross-validated data on the train set.
 %First defining a partition of the data for k-fold cross-validation. NB: we
 %should normally be more careful about the fact that the spike count data
@@ -94,33 +148,36 @@ DecMean_full(~traintidx) = DecMean(~traintidx);
 ntimepts_trainset = sum(traintidx);
 cv = crossvalPartition(ntimepts_trainset, decparams.kfold);
 
-%Computing the spike train predicted from the place field using k-fold 
-%cross-validation
-mapX_cv = NaN(ncells, nbins, decparams.kfold);
-DecMax_cv = NaN(ntimepts_trainset,1);
-DecMean_cv = NaN(ntimepts_trainset,1);
+%Computing the place field using k-fold cross-validation
+mapXY_cv = NaN(ncells, nYbins, nXbins, decparams.kfold);
+XDecMax_cv = NaN(ntimepts_trainset,1);
+YDecMax_cv = NaN(ntimepts_trainset,1);
+XDecMean_cv = NaN(ntimepts_trainset,1);
+YDecMean_cv = NaN(ntimepts_trainset,1);
 X_discrete_trainset = X_discrete(traintidx);
+Y_discrete_trainset = Y_discrete(traintidx);
 spkTrain_trainset = spikeTrain(traintidx,:);
 spkCount_trainset = spkCount(traintidx,:);
 for i = 1:decparams.kfold
     %Subsetting X and spiketrain according to the train set of the
     %current fold
     Xtraining = X_discrete_trainset(cv.trainsets{i});
+    Ytraining = Y_discrete_trainset(cv.trainsets{i});
     Spktraining = spkTrain_trainset(cv.trainsets{i},:);
     
     %Computing occupancy map for the current fold
     flat = decparams.scalingFactor * ones(size(Xtraining));
-    occmap_cv = Compute1DMap(Xtraining, flat, nbins);
+    occmap_cv = Compute2DMap(Xtraining, Ytraining, flat, nXbins, nYbins);
     occmap_cv(occmap_cv <= decparams.occ_th) = NaN;
-    occmap_cv = GaussianSmooth1D(occmap_cv, decparams.XsmthNbins);
+    occmap_cv = GaussianSmooth(occmap_cv, [decparams.YsmthNbins decparams.XsmthNbins]);
     
     %Computing the spike count map and place field of each cell for the
     %current fold
     for icell = 1:ncells
-        scmap_cv = Compute1DMap(Xtraining, Spktraining(:,icell), nbins);
+        scmap_cv = Compute2DMap(Xtraining, Ytraining, Spktraining(:,icell), nXbins, nYbins);
         scmap_cv(isnan(occmap_cv)) = NaN;
-        scmap_cv = GaussianSmooth1D(scmap_cv, decparams.XsmthNbins);
-        mapX_cv(icell,:,i) = scmap_cv ./ occmap_cv;
+        scmap_cv = GaussianSmooth(scmap_cv, [decparams.YsmthNbins decparams.XsmthNbins]);
+        mapXY_cv(icell,:,:,i) = scmap_cv ./ occmap_cv;
     end
 end
 
@@ -129,12 +186,16 @@ end
 %partition.
 for i = 1:decparams.kfold
     spkCountTest = spkCount_trainset(cv.testsets{i},:);
-    [DecMax_cv(cv.testsets{i}), DecMean_cv(cv.testsets{i})] = ComputeBayesMAP(mapX_cv(:,:,i), spkCountTest, decparams.dectimewin);
+    
+    [XDecMax_cv(cv.testsets{i}), YDecMax_cv(cv.testsets{i}),...
+     XDecMean_cv(cv.testsets{i}), YDecMean_cv(cv.testsets{i})] = ComputeBayesMAP2D(mapXY_cv(:,:,:,i), spkCountTest, decparams.dectimewin);
 end
 
 %Filling in cross-validated decoded positions for the train set.
-DecMax_full(traintidx) = DecMax_cv;
-DecMean_full(traintidx) = DecMean_cv;
+XDecMax(traintidx) = XDecMax_cv;
+YDecMax(traintidx) = YDecMax_cv;
+XDecMean(traintidx) = XDecMean_cv;
+YDecMean(traintidx) = YDecMean_cv;
 
 %%
 %Populate the output structure with results to be saved
@@ -143,22 +204,41 @@ Dec.decparams = decparams;
 
 ncells_orig = size(Srep, 2);
 Dec.Xbincenters = decparams.Xbinedges(1:end-1) + decparams.Xbinsize / 2;
-Dec.nXbins = nbins;
-Dec.mapX = NaN(ncells_orig, nbins);
-Dec.mapX_cv = NaN(ncells_orig, nbins, decparams.kfold);
-Dec.occmap = NaN(1, nbins);
+Dec.nXbins = nXbins;
 
-Dec.mapX(cellidx,:) = mapX;
-Dec.mapX_cv(cellidx,:,:) = mapX_cv;
+Dec.nYbins = nYbins;
+if nYbins > 1
+    Dec.Ybincenters = decparams.Ybinedges(1:end-1) + decparams.Ybinsize / 2;
+else
+    Dec.Ybincenters = 1;
+end
+
+Dec.mapXY = NaN(ncells_orig, nYbins, nXbins);
+Dec.mapXY_cv = NaN(ncells_orig, nYbins, nXbins, decparams.kfold);
+Dec.occmap = NaN(1, nYbins, nXbins);
+
+Dec.mapXY(cellidx,:,:) = mapXY;
+Dec.mapXY_cv(cellidx,:,:,:) = mapXY_cv;
 Dec.occmap = occmap;
 
 Dec.X = X_discrete;
+Dec.Y = Y_discrete;
 
-Dec.XDecMax = DecMax_full;
-Dec.XDecMean = DecMean_full;
+Dec.XDecMax = XDecMax;
+Dec.YDecMax = YDecMax;
+Dec.XDecMean = XDecMean;
+Dec.YDecMean = YDecMean;
 
-%Calculating the distribution of decoded variable as a function of the 
-%actual variable over the training set (just to be able to quickly check 
+Dec.XErrMax = (XDecMax - X_discrete);
+Dec.YErrMax = YDecMax - Y_discrete;
+Dec.XErrMean = (XDecMean - X_discrete);
+Dec.YErrMean = YDecMean - Y_discrete;
+
+%Calculating the distribution of decoded variables as a function of the 
+%actual variables over the training set (just to be able to quickly check 
 %the quality of decoding on that portion of the data).
 Dec.Xdecmat = Compute2DMap(Dec.X(traintidx), Dec.XDecMax(traintidx), ones(size(Dec.X(traintidx))), Dec.nXbins, Dec.nXbins);
+Dec.Xdecmat = Dec.Xdecmat ./ sum(Dec.Xdecmat, 1, 'omitnan');
+Dec.Ydecmat = Compute2DMap(Dec.Y(traintidx), Dec.YDecMax(traintidx), ones(size(Dec.Y(traintidx))), Dec.nYbins, Dec.nYbins);
+Dec.Ydecmat = Dec.Ydecmat ./ sum(Dec.Ydecmat, 1, 'omitnan');
 end

@@ -5,19 +5,21 @@ function pattparams = DefinePattParams(Nav,Spk)
 %   pattparams = DefinePattParams(Nav, Spk)
 %
 % Inputs:
-%   Nav: Structure containing navigation data (e.g. timestamps, positions, speeds, etc.).
-%   Spk: Structure containing spike train data for each neuron (spike counts, etc.).
+%   Nav: Structure containing navigation data (timestamps, positions, speeds, etc.).
+%   Spk: Structure containing spike train data for each neuron (timestamps, spike counts, etc.).
 %
 % Outputs:
-%   pattparams: Structure containing pattern analysis parameters with the folllowing fields:
-%   - condition: Experimental conditions for pattern estimation.
-%   - dir: Lap types (directions) for pattern estimation.
-%   - spdthreshold: Minimum speed threshold for pattern estimation.
-%   - cellidx: Subset of cells used for pattern detection.
-%   - nspk_th: Minimal number of spikes over the train set to consider a cell.
-%   - strength_th: Pattern activation threshold to convert strength into "spikes".
-%   - sampleRate: Sampling rate of the data.
-%   - timewin: Size of the spike count window in seconds.
+%   pattparams: Structure containing pattern analysis parameters.
+%
+% Pattern Analysis Parameters (within the output structure pattparams):
+%   condition: Experimental conditions for pattern estimation.
+%   dir: Lap types (directions) for pattern estimation.
+%   spdthreshold: Minimum speed threshold for pattern estimation.
+%   cellidx: Subset of cells used for pattern detection.
+%   nspk_th: Minimal number of spikes over the train set to consider a cell.
+%   strength_th: Pattern activation threshold to convert strength into "spikes".
+%   sampleRate: Sampling rate of the data.
+%   timewin: Size of the spike count window in seconds.
 %
 % Written by J. Fournier in 08/2023 for the iBio Summer school.
 

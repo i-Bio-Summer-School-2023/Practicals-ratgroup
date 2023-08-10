@@ -38,6 +38,9 @@ function Maps = MapsAnalyses1D(Nav, Srep, mapsparams)
 %    Spk = LoaddataSpk(loadparams, Nav.sampleTimes);
 %    Srep = Spk.spikeTrain;
 %    mapsparams = DefineMapsParams(Nav,Spk);
+%
+%    %change parameters of mapsparams here if needed
+%
 %    Maps1D = MapsAnalyses1D(Nav, Spk.spikeTrain, mapsparams);
 %
 % See also: Compute1DMap, GaussianSmooth1D, crossvalPartition, computeEV,
@@ -46,7 +49,7 @@ function Maps = MapsAnalyses1D(Nav, Srep, mapsparams)
 % written by J.Fournier 08/2023 for the iBio Summer school
 %
 % Note: This function provides place field analysis for a one-dimensional environment.
-% For 2-dimensional analyses, consider using appropriate MapsAnalyses2D.
+% For 2-dimensional analyses, consider using MapsAnalyses2D.
 
 %%
 if isempty(mapsparams.Xvariablename)

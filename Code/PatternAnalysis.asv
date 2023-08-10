@@ -1,8 +1,8 @@
 function Pat = PatternAnalysis(Nav, Srep, pattparams)
-% PatternAnalysis - Identify cell assemblies in Srep, based on independent component analysis.
+% PatternAnalysis - Identify cell assemblies based on independent component analysis.
 %
-%
-% Pat = PatternAnalysis(Nav, Srep, pattparams)
+% Usage:
+%   Pat = PatternAnalysis(Nav, Srep, pattparams)
 %
 % Inputs:
 %   Nav: Structure containing navigation data (timestamps, positions, speeds, etc.).
@@ -10,23 +10,20 @@ function Pat = PatternAnalysis(Nav, Srep, pattparams)
 %   pattparams: Structure with pattern analysis parameters.
 %
 % Outputs:
-%   Pat: Structure containing pattern analysis results wtih the following
-%   fields:
-%   - weights: Weight matrix representing the contribution of each neuron to each assembly pattern.
-%   - cellAssemblies: Logical matrix indicating which neurons belong to each detected cell assemblies.
+%   Pat: Structure containing pattern analysis results.
+%
+% Pattern Analysis Results Fields (within the output structure Pat):
+%   - weights: Weight matrix representing the contribution of neurons to each assembly pattern.
+%   - cellAssemblies: Logical matrix indicating which neurons belong to detected cell assemblies.
 %   - Sparity: Sparsity measure of each assembly pattern (values between 0 and 1).
-%   - strength: Expression strength of each assembly pattern over time.
-%   - activation: events of assembly pattern activation.
+%   strength: Expression strength of each assembly pattern over time.
+%   activation: Detected events of assembly pattern activation.
 %
 % See Also:
 %   fastICA, GaussianSmooth, findpeaks
 %
 % Method based on the description in the supplementary information of
 % van de Ven et al., 2016 in Neuron.
-%
-%
-% Usage:
-%   Pat = PatternAnalysis(Nav, Srep, pattparams)
 %
 % Written by J. Fournier in 08/2023 for the iBio Summer school.
 

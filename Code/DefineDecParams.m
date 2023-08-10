@@ -26,7 +26,7 @@ decparams.sampleRate = 1 / nanmean(diff(Nav.sampleTimes));
 decparams.scalingFactor = 1 / decparams.sampleRate;
 
 %Name of the X variable to decode. Default is Xpos
-decparams.Xvariablename = 'Xpos';%(check here)
+decparams.Xvariablename = 'Xpos';
 
 %Range of positions (in cm) over which decoding will be performed, ie over
 %which place fields will be computed
@@ -45,7 +45,7 @@ decparams.XsmthNbins = decparams.Xsmthbinsize / decparams.Xbinsize;
 decparams.Xbinedges = decparams.Xrange(1):decparams.Xbinsize:decparams.Xrange(2);
 
 %Name of the Y variable to decode. Default is XDir.
-decparams.Yvariablename = 'XDir';%(check here)
+decparams.Yvariablename = 'XDir';
 
 %Range of Y over which place fields will be estimated.
 decparams.Yrange = [-2 2];%(check here)

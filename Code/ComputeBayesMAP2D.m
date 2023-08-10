@@ -31,7 +31,7 @@ end
 
 %We should end up with a matrix of probability of size Ntimes x nXbins x
 %nYbins
-Posterior = squeeze(Posterior);
+Posterior = permute(Posterior, [1 3 4 2]);
 
 %Normalizing so to that the sum of probabilities over positions equals 1.
 Posterior = Posterior ./ nansum(Posterior, [2 3]);

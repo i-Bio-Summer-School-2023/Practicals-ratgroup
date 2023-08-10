@@ -18,10 +18,10 @@ function Cross = CrossSpkAnalyses(Nav, Srep, crossparams)
 % Cross-Correlation Analysis Results (within the output structure Cross):
 %   crossparams: Parameters used for cross-correlation analysis.
 %   lagbins: Time bins for the cross-correlation lag.
-%   ccAll: Pair-wise cross-correlation of original signals.
-%   ccNoise: Pair-wise noise correlation (original signals minus shuffle controls).
-%   ccSig: Pair-wise cross-correlation estimated by shuffling.
-%   ccSigSD: Standard deviation of shuffle control cross-correlation.
+%   ccAll: Pair-wise cross-correlation matrix of original signals.
+%   ccNoise: Pair-wise noise correlation matrix (original signals minus shuffle controls).
+%   ccShf: Pair-wise shuffle control cross-correlation matrix.
+%   ccShfSD: Standard deviation of shuffle control cross-correlation matrix.
 %   pval: P-value matrix for the maximum cross-correlation peak.
 %   bestcc: Maximum cross-correlation value.
 %   bestlag: Lag corresponding to the maximum cross-correlation value.
@@ -185,9 +185,9 @@ end
 %%
 %Estimating the noise correlation as the actual correlation minus the
 %average of the shuffle controls.
-ccSig = mean(ccSigShf, 4, 'omitnan');
-ccNoise = ccAll - ccSig;
-ccSigSD = std(ccAll - ccSigShf, [], 4);
+ccShf = mean(ccSigShf, 4, 'omitnan');
+ccNoise = ccAll - ccShf;
+ccShfSD = std(ccAll - ccSigShf, [], 4);
 
 %Estimating the p-value of the maximum of the cross-correlation.
 [m, I] = max(ccAll, [], 3);
@@ -209,8 +209,8 @@ ncells_orig = size(Srep, 2);
 nlagbins = size(ccAll, 3);
 Cross.ccAll = NaN(ncells_orig, ncells_orig, nlagbins);
 Cross.ccNoise = NaN(ncells_orig, ncells_orig, nlagbins);
-Cross.ccSig = NaN(ncells_orig, ncells_orig, nlagbins);
-Cross.ccSigSD = NaN(ncells_orig, ncells_orig, nlagbins);
+Cross.ccShf = NaN(ncells_orig, ncells_orig, nlagbins);
+Cross.ccShfSD = NaN(ncells_orig, ncells_orig, nlagbins);
 Cross.pval = NaN(ncells_orig, ncells_orig);
 Cross.bestcc = NaN(ncells_orig, ncells_orig);
 Cross.bestlag = NaN(ncells_orig, ncells_orig);
@@ -219,8 +219,8 @@ for i = 1:ncells
     for j = 1:ncells
         Cross.ccAll(cellidx(i),cellidx(j),:) = ccAll(i,j,:);
         Cross.ccNoise(cellidx(i),cellidx(j),:) = ccNoise(i,j,:);
-        Cross.ccSig(cellidx(i),cellidx(j),:) = ccSig(i,j,:);
-        Cross.ccSigSD(cellidx(i),cellidx(j),:) = ccSigSD(i,j,:);
+        Cross.ccShf(cellidx(i),cellidx(j),:) = ccShf(i,j,:);
+        Cross.ccShfSD(cellidx(i),cellidx(j),:) = ccShfSD(i,j,:);
         Cross.pval(cellidx(i),cellidx(j)) = pval(i,j);
         Cross.bestcc(cellidx(i),cellidx(j)) = bestcc(i,j);
         Cross.bestlag(cellidx(i),cellidx(j)) = bestlag(i,j);

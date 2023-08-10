@@ -109,10 +109,10 @@ mapsparams.Xvariablename = 'Xpos';
 mapsparams.Xrange = [0 100];
 
 %Size of the X bins.
-mapsparams.Xbinsize = 4;%(check here)
+mapsparams.Xbinsize = 4;
 
 %Size of the gaussian window for smoothing along X.
-mapsparams.Xsmthbinsize = 2;
+mapsparams.Xsmthbinsize = 4;
 
 %Size of the gaussian window for smoothing place fields along X (in bins).
 mapsparams.XsmthNbins = mapsparams.Xsmthbinsize / mapsparams.Xbinsize;%(check here)

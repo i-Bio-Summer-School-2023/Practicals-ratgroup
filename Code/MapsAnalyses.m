@@ -1,7 +1,7 @@
-function Maps = MapsAnalyses2D(Nav, Srep, mapsparams)
-% MapsAnalyses2D - Estimates two-dimensional place fields and their significance.
+function Maps = MapsAnalyses(Nav, Srep, mapsparams)
+% MapsAnalyses - Estimates two-dimensional place fields and their significance.
 % 
-%   Maps = MapsAnalyses2D(Nav, Srep, mapsparams)
+%   Maps = MapsAnalyses(Nav, Srep, mapsparams)
 % 
 %   This function estimates two-dimensional maps and their significance
 %   using either shuffling or model comparison on cross-validated predictions.
@@ -20,7 +20,7 @@ function Maps = MapsAnalyses2D(Nav, Srep, mapsparams)
 %     * mapsparams: Parameters used for analysis
 %     * Xbincenters: Bin centers along X-axis
 %     * Ybincenters: Bin centers along Y-axis
-%     * occmap: Occupancy map, a 1 x nXbins arrays (scaled by
+%     * occmap: Occupancy map, a nYbins x nXbins arrays (scaled by
 %       mapsparams.scalingFactor)
 %     * SI: Spatial information
 %     * SparsityIndex: Sparsity index for each cell.
@@ -45,7 +45,10 @@ function Maps = MapsAnalyses2D(Nav, Srep, mapsparams)
 %    Spk = LoaddataSpk(loadparams, Nav.sampleTimes);
 %    Srep = Spk.spikeTrain;
 %    mapsparams = DefineMapsParams(Nav,Spk);
-%    Maps2D = MapsAnalyses2D(Nav, Spk.spikeTrain, mapsparams);
+%
+%    %change parameters of mapsparams here if needed
+%
+%    Maps2D = MapsAnalyses(Nav, Spk.spikeTrain, mapsparams);
 % 
 % See also: Compute2DMap, GaussianSmooth, computeEV, computeLLH_normal,
 %           crossvalPartition, SpatialInfo, FieldSparsity, FieldSelectivity,
@@ -58,8 +61,15 @@ function Maps = MapsAnalyses2D(Nav, Srep, mapsparams)
 if isempty(mapsparams.Xvariablename)
     mapsparams.Xvariablename = 'Xpos';
 end
-if isempty(mapsparams.Yvariablename)
-    mapsparams.Yvariablename = 'XDir';
+X = Nav.(mapsparams.Xvariablename);
+
+%If no Y variable are indicated, we'll just compute a 1D place field
+if ~isempty(mapsparams.Yvariablename)
+    Y = Nav.(mapsparams.Yvariablename);
+else
+    Y = ones(size(X));
+    mapsparams.Ybinedges = 1;
+    mapsparams.YsmthNbins = 0;
 end
 
 %Selecting time and cell indices over which to compute place fields
@@ -67,8 +77,9 @@ tidx = ismember(Nav.Condition, mapsparams.condition) &...
        ismember(Nav.XDir, mapsparams.dir) &...
        ismember(Nav.laptype, mapsparams.laptype) &...
        Nav.Spd >= mapsparams.spdthreshold &...
-       ~isnan(Nav.(mapsparams.Xvariablename)) & ...
-       ~isnan(Nav.(mapsparams.Yvariablename));
+       X >= mapsparams.Xbinedges(1) & X <= mapsparams.Xbinedges(end) &...
+       Y >= mapsparams.Ybinedges(1) & Y <= mapsparams.Ybinedges(end) &...
+       ~isnan(X) & ~isnan(Y);
 
 if islogical(mapsparams.cellidx)
     cellidx = find(mapsparams.cellidx(:)' & sum(Srep(tidx,:), 1, 'omitnan') > mapsparams.nspk_th);
@@ -78,17 +89,24 @@ end
 
 %Subsetting spikeTrain, X and XDir.
 spikeTrain = Srep(tidx,cellidx);
-X = Nav.(mapsparams.Xvariablename)(tidx);
-Y = Nav.(mapsparams.Yvariablename)(tidx);
+X = X(tidx);
+Y = Y(tidx);
+
+%number of position bins along X
+nXbins = max(1,numel(mapsparams.Xbinedges) - 1);
+
+%number of direction bins
+nYbins = max(1,numel(mapsparams.Ybinedges) - 1);
+
+%If no Y variable are indicated, we'll just compute a 1D place field so
+%bining parameters are changed accordingly
+if isempty(mapsparams.Yvariablename)
+    %number of direction bins
+    nYbins = 1;
+end
 
 %number of cells selected for place field analysis
 ncells = size(spikeTrain, 2);
-
-%number of position bins
-nXbins = numel(mapsparams.Xbinedges) - 1;
-
-%number of direction bins
-nYbins = numel(mapsparams.Ybinedges) - 1;
 
 %number of data points
 ntimepts = size(spikeTrain, 1);
@@ -103,49 +121,49 @@ Y_discrete = discretize(Y, mapsparams.Ybinedges);
 %%
 %Computing occupancy map (same for all cells)
 flat =  mapsparams.scalingFactor * ones(size(X_discrete));
-occmap = Compute2DMap(Y_discrete, X_discrete, flat, nYbins, nXbins);
+occmap = Compute2DMap(X_discrete, Y_discrete, flat, nXbins, nYbins);
 
 %Removing occupancy for positions below the occupancy threshold
 occmap(occmap <= mapsparams.occ_th) = NaN;
 
 %Smoothing the occupancy map with a 2D gaussian window
-occmap = GaussianSmooth(occmap, [mapsparams.XsmthNbins mapsparams.YsmthNbins]);
+occmap = GaussianSmooth(occmap, [mapsparams.YsmthNbins mapsparams.XsmthNbins]);
 
 %Computing and smoothing spike count map for each cell
-scmap = NaN(ncells, nXbins, nYbins);
+scmap = NaN(ncells, nYbins, nXbins);
 for icell = 1:ncells
-    scmap(icell,:,:) = Compute2DMap(Y_discrete, X_discrete, spikeTrain(:,icell), nYbins, nXbins);
-    scmap(icell,isnan(occmap)) = NaN;
-    scmap(icell,:,:) = GaussianSmooth(squeeze(scmap(icell,:,:)), [mapsparams.XsmthNbins mapsparams.YsmthNbins]);
+    scmapcell = Compute2DMap(X_discrete, Y_discrete, spikeTrain(:,icell), nXbins, nYbins);
+    scmapcell(isnan(occmap)) = NaN;
+    scmapcell = GaussianSmooth(scmapcell, [mapsparams.YsmthNbins mapsparams.XsmthNbins]);
+    scmap(icell,:,:) = scmapcell;
 end
 
 %Calculating the place field x direction maps by dividing scmap and occmap
-occmap = permute(occmap, [3 1 2]);%permuting dimension for element-wise division
-mapXY = scmap ./ occmap;
+mapXY = scmap ./ permute(occmap, [3 1 2]);
 occmap = squeeze(occmap);
 
 %%
 %Quantifying position selectivity by computing the spatial information (SI),
 %the sparsity index, the selectivity index and the directionality index.
-SI = NaN(ncells, nYbins);
-SparsityIndex = NaN(ncells, nYbins);
-SelectivityIndex = NaN(ncells, nYbins);
+SI = NaN(ncells, 1);
+SparsityIndex = NaN(ncells, 1);
+SelectivityIndex = NaN(ncells, 1);
 DirectionalityIndex = NaN(ncells, 1);
 for icell = 1:ncells
-    for iy = 1:nYbins
-        SI(icell,iy) = SpatialInfo(mapXY(icell,:,iy), occmap(:,iy));
-        SparsityIndex(icell,iy) = FieldSparsity(mapXY(icell,:,iy), occmap(:,iy));
-        SelectivityIndex(icell,iy) = FieldSelectivity(mapXY(icell,:,iy));
+        SI(icell) = SpatialInfo(mapXY(icell,:), occmap(:));
+        SparsityIndex(icell) = FieldSparsity(mapXY(icell,:), occmap(:));
+        SelectivityIndex(icell) = FieldSelectivity(mapXY(icell,:));
+    if nYbins == 2
+        DirectionalityIndex(icell) = FieldDirectionality(mapXY(icell,1,:), mapXY(icell,2,:));
     end
-    DirectionalityIndex(icell) = FieldDirectionality(mapXY(icell,:,1), mapXY(icell,:,2));
 end
 
 %%
 %Computing shuffle controls by randomly shifting time bins of positions and
 %calculate the selectivity metrics for each shuffle control
-SI_Shf = NaN(ncells, nYbins, mapsparams.nShuffle);
-SparsityIndex_Shf = NaN(ncells, nYbins, mapsparams.nShuffle);
-SelectivityIndex_Shf = NaN(ncells, nYbins, mapsparams.nShuffle);
+SI_Shf = NaN(ncells, mapsparams.nShuffle);
+SparsityIndex_Shf = NaN(ncells, mapsparams.nShuffle);
+SelectivityIndex_Shf = NaN(ncells, mapsparams.nShuffle);
 DirectionalityIndex_Shf = NaN(ncells, mapsparams.nShuffle);
 %Initializing the random number generator for reproducibility purposes
 s = RandStream('mt19937ar','Seed',0);
@@ -155,26 +173,26 @@ for iperm  = 1:mapsparams.nShuffle
     X_discrete_shf = circshift(X_discrete, round(tshift));%(Check here)
     Y_discrete_shf = circshift(Y_discrete, round(tshift));%(Check here)
     for icell = 1:ncells
-        scmap_shf = Compute2DMap(Y_discrete_shf, X_discrete_shf, spikeTrain(:,icell), nYbins, nXbins);
+        scmap_shf = Compute2DMap(X_discrete_shf, Y_discrete_shf, spikeTrain(:,icell), nXbins, nYbins);
         scmap_shf(isnan(occmap)) = NaN;
-        scmap_shf = GaussianSmooth(scmap_shf, [mapsparams.XsmthNbins mapsparams.YsmthNbins]);
+        scmap_shf = GaussianSmooth(scmap_shf, [mapsparams.YsmthNbins mapsparams.XsmthNbins]);
         mapX_shf = scmap_shf ./ occmap;
         
         %saving only the spatial selectivity metrics for each permutation
-        for iy = 1:nYbins
-            SI_Shf(icell,iy,iperm) = SpatialInfo(mapX_shf(:,iy), occmap(:,iy));
-            SparsityIndex_Shf(icell,iy,iperm) = FieldSparsity(mapX_shf(:,iy), occmap(:,iy));
-            SelectivityIndex_Shf(icell,iy,iperm) = FieldSelectivity(mapX_shf(:,iy));
+            SI_Shf(icell,iperm) = SpatialInfo(mapX_shf(:), occmap(:));
+            SparsityIndex_Shf(icell,iperm) = FieldSparsity(mapX_shf(:), occmap(:));
+            SelectivityIndex_Shf(icell,iperm) = FieldSelectivity(mapX_shf(:));
+        if nYbins == 2
+            DirectionalityIndex_Shf(icell,iperm) = FieldDirectionality(mapX_shf(:,1), mapX_shf(:,2));
         end
-        DirectionalityIndex_Shf(icell,iperm) = FieldDirectionality(mapX_shf(:,1), mapX_shf(:,2));
     end
 end
 
 %Computing p-values from the distribution of selectivity measures obtained
 %from the shuffle controls
-SI_pval = sum(SI_Shf > SI, 3) / mapsparams.nShuffle;
-SparsityIndex_pval = sum(SparsityIndex_Shf > SparsityIndex, 3) / mapsparams.nShuffle;
-SelectivityIndex_pval = sum(SelectivityIndex_Shf > SelectivityIndex, 3) / mapsparams.nShuffle;
+SI_pval = sum(SI_Shf > SI, 2) / mapsparams.nShuffle;
+SparsityIndex_pval = sum(SparsityIndex_Shf > SparsityIndex, 2) / mapsparams.nShuffle;
+SelectivityIndex_pval = sum(SelectivityIndex_Shf > SelectivityIndex, 2) / mapsparams.nShuffle;
 DirectionalityIndex_pval = sum(DirectionalityIndex_Shf > DirectionalityIndex, 2) / mapsparams.nShuffle;
 
 %%
@@ -183,27 +201,27 @@ cv = crossvalPartition(ntimepts, mapsparams.kfold);
 
 %Computing the spike train predicted from the place field using k-fold 
 %cross-validation
-mapXY_cv = NaN(ncells, nXbins, nYbins, mapsparams.kfold);
+mapXY_cv = NaN(ncells, nYbins, nXbins, mapsparams.kfold);
 Ypred = NaN(ntimepts,ncells);
 for i = 1:mapsparams.kfold
     %Subsetting X and spiketrain according to the train set of the
     %current fold
     Xtraining = X_discrete(cv.trainsets{i});
-    Dirtraining = Y_discrete(cv.trainsets{i});
+    Ytraining = Y_discrete(cv.trainsets{i});
     Spktraining = spikeTrain(cv.trainsets{i},:);
     
     %Computing occupancy map for the current fold
     flat = mapsparams.scalingFactor * ones(size(Xtraining));
-    occmap_cv = Compute2DMap(Dirtraining, Xtraining, flat, nYbins, nXbins);
+    occmap_cv = Compute2DMap(Xtraining, Ytraining, flat, nXbins, nYbins);
     occmap_cv(occmap_cv <= mapsparams.occ_th) = NaN;
-    occmap_cv = GaussianSmooth(occmap_cv, [mapsparams.XsmthNbins mapsparams.YsmthNbins]);
+    occmap_cv = GaussianSmooth(occmap_cv, [mapsparams.YsmthNbins mapsparams.XsmthNbins]);
     
     %Computing the spike count map and place field of each cell for the
     %current fold
     for icell = 1:ncells
-        scmap_cv =Compute2DMap(Dirtraining, Xtraining, Spktraining(:,icell), nYbins, nXbins);
+        scmap_cv = Compute2DMap(Xtraining, Ytraining, Spktraining(:,icell), nXbins, nYbins);
         scmap_cv(isnan(occmap_cv)) = NaN;
-        scmap_cv = GaussianSmooth(scmap_cv, [mapsparams.XsmthNbins mapsparams.YsmthNbins]);
+        scmap_cv = GaussianSmooth(scmap_cv, [mapsparams.YsmthNbins mapsparams.XsmthNbins]);
         mapXY_cv(icell,:,:,i) = scmap_cv ./ occmap_cv;
     end
     
@@ -214,15 +232,10 @@ for i = 1:mapsparams.kfold
     %Computing the spike train predicted on the test set from the place 
     %computed from the train set
     for icell = 1:ncells
-        XYlinidx = sub2ind([ncells, nXbins, nYbins, mapsparams.kfold], icell*ones(size(Xtest)), Xtest, Ytest, i*ones(size(Xtest)));
-        try
-        Ypred(cv.testsets{i},icell) = mapXY_cv(XYlinidx) * mapsparams.scalingFactor;%(Check here)
-        catch
-            keyboard
-        end
+        XYlinidx = sub2ind([ncells, nYbins, nXbins, mapsparams.kfold], icell*ones(size(Xtest)), Ytest, Xtest, i*ones(size(Xtest)));
+        Ypred(cv.testsets{i},icell) = mapXY_cv(XYlinidx) * mapsparams.scalingFactor;
     end
 end
-
 
 
 %Now computing the spike train predicted from the mean firing rate of the 
@@ -273,21 +286,25 @@ mapsparams.tidx = tidx;
 Maps.mapsparams = mapsparams;
 
 Maps.Xbincenters = mapsparams.Xbinedges(1:end-1) + mapsparams.Xbinsize / 2;
-Maps.Ybincenters = mapsparams.Xbinedges(1:end-1) + mapsparams.Ybinsize / 2;
+if nYbins > 1
+    Maps.Ybincenters = mapsparams.Ybinedges(1:end-1) + mapsparams.Ybinsize / 2;
+else
+    Maps.Ybincenters = 1;
+end
 
 ncells_orig = size(Srep, 2);
 nXbins = numel(Maps.Xbincenters);
-Maps.mapXY = NaN(ncells_orig, nXbins, nYbins);
-Maps.mapXY_cv = NaN(ncells_orig, nXbins, nYbins, mapsparams.kfold);
-Maps.mapXY_SE = NaN(ncells_orig, nXbins, nYbins);
-Maps.occmap = NaN(1, nXbins, nYbins);
-Maps.SI = NaN(ncells_orig, nYbins);
-Maps.SparsityIndex = NaN(ncells_orig, nYbins);
-Maps.SelectivityIndex = NaN(ncells_orig, nYbins);
+Maps.mapXY = NaN(ncells_orig, nYbins, nXbins);
+Maps.mapXY_cv = NaN(ncells_orig, nYbins, nXbins, mapsparams.kfold);
+Maps.mapXY_SE = NaN(ncells_orig, nYbins, nXbins);
+Maps.occmap = NaN(1, nYbins, nXbins);
+Maps.SI = NaN(ncells_orig, 1);
+Maps.SparsityIndex = NaN(ncells_orig, 1);
+Maps.SelectivityIndex = NaN(ncells_orig, 1);
 Maps.DirectionalityIndex = NaN(ncells_orig, 1);
-Maps.SI_pval = NaN(ncells_orig, nYbins);
-Maps.SparsityIndex_pval = NaN(ncells_orig, nYbins);
-Maps.SelectivityIndex_pval = NaN(ncells_orig, nYbins);
+Maps.SI_pval = NaN(ncells_orig, 1);
+Maps.SparsityIndex_pval = NaN(ncells_orig, 1);
+Maps.SelectivityIndex_pval = NaN(ncells_orig, 1);
 Maps.DirectionalityIndex_pval = NaN(ncells_orig, 1);
 Maps.EV = NaN(ncells_orig,1);
 Maps.EV_cst = NaN(ncells_orig,1);
