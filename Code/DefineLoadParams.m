@@ -100,7 +100,8 @@ loadparams.ripevtfilename = [loadparams.animalname '-' num2str(loadparams.sessio
 %Names of the .mat files to load
 loadparams.posfilename = 'Positions.mat';
 loadparams.laptypefilename = 'LapType2.mat';
-loadparams.spkfilename = 'HippoSpikes.mat';
+% loadparams.spkfilename = 'HippoSpikes.mat';
+loadparams.spkfilename = 'AllSpikes.mat';
 loadparams.spkinfofilename = 'IndexType.mat';
 loadparams.lfpfilename = 'LFP2.mat';
 loadparams.accfilename = 'LFP2.mat';
@@ -116,9 +117,14 @@ loadparams.sampleRate_rawLfp = 600;
 %Size of the pixels of the video tracking in cm
 loadparams.pix2cm = 0.43;
 
-%List of shank numbers from which spikes will be loaded (corresponds to
-%shanks located in the hippocampus
-loadparams.ShankList = 1:4;
+%List of shanks located in the hippocampus
+loadparams.ShankList_hpc = 1:4;
+
+%List of shanks located in the left bla
+loadparams.ShankList_blaL = 5:8;
+
+%List of shanks located in the right bla
+loadparams.ShankList_blaR = 13:19;
 
 %LFP channel to load from hippocampal recording
 loadparams.LfpChannel_Hpc = 2;

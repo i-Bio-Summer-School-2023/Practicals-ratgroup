@@ -94,9 +94,7 @@ Spk.sampleTimes = sampleTimes;
 Spk.shankID = info.IndexType(hpcblaClustidx,3)';
 Spk.PyrCell = (info.IndexType(hpcblaClustidx,6) == 1)';
 Spk.IntCell = (info.IndexType(hpcblaClustidx,6) == 2)';
-Spk.hpcCell = ismember(Spk.shankID,loadparams.ShankList_hpc);
-Spk.blaLCell = ismember(Spk.shankID,loadparams.ShankList_blaL);
-Spk.blaRCell = ismember(Spk.shankID,loadparams.ShankList_blaR);
+Spk.hpcCell = 
 
 %%
 %loading ripples timestamps and filling in Spk.ripple with 1 when there
