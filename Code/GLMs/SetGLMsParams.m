@@ -25,16 +25,10 @@ function glmsparams = SetGLMsParams(Nav,Spk)
 %   - cellidx: Logical array indicating the subset of cells for which GLMs will be computed.
 %   - sampleRate: Sampling rate of the data.
 %   - scalingFactor: Scaling factor on the response data.
-%   - Xrange: Range of spatial positions over which GLMs will be estimated.
-%   - Xbinsize: Size of the position bins.
-%   - Xsmthbinsize: Size of the Gaussian window for smoothing position tuning curves (in cm).
-%   - XsmthNbins: Size of the Gaussian window for smoothing position tuning curves (in bins).
+%   - XsmthNbins: Size of the Gaussian window for smoothing along X (in bins).
 %   - Xbinedges: Edges of position bins used to discretize positions.
-%   - Spdrange: Range of speeds over which GLMs will be estimated (in cm/s).
-%   - Spdbinsize: Size of the speed bins (in cm/s).
-%   - Spdsmthbinsize: Size of the Gaussian window for smoothing speed tuning curves (in cm/s).
-%   - SpdsmthNbins: Size of the Gaussian window for smoothing speed tuning curves (in bins).
-%   - Spdbinedges: Edges of speed bins used to discretize speed.
+%   - YsmthNbins: Size of the Gaussian window for smoothing speed tuning curves (in bins).
+%   - Ybinedges: Edges of speed bins used to discretize speed.
 %   - occ_th: Occupancy threshold above which predictors are included in the GLM estimate.
 %   - nspk_th: Minimal number of spikes to consider a cell for GLM estimation.
 %   - kfold: Number of folds for cross-validation.
@@ -53,7 +47,7 @@ function glmsparams = SetGLMsParams(Nav,Spk)
 
 
 %Conditions over the fields of Nav for which place fields will be estimated
-%mapsparams.subset should be a structure where fields have names of the 
+%glmsparams.subset should be a structure where fields have names of the 
 %fields of Nav to which the condition should apply to.
 glmsparams.subset = [];
 
@@ -61,7 +55,7 @@ glmsparams.subset = [];
 glmsparams.subset.Condition = [1 3 5];
 glmsparams.subset.Condition_op = 'ismember';
 
-glmsparams.subset.XDir = [-1 1];
+glmsparams.subset.XDir = [1];
 glmsparams.subset.XDir_op = 'ismember';
 
 glmsparams.subset.laptype = [-1 0 1];

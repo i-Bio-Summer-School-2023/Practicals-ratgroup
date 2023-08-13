@@ -189,7 +189,7 @@ for i = 1:decparams.kfold
     
     %Computing the spike count map and place field of each cell for the
     %current fold
-    parfor icell = 1:ncells
+    for icell = 1:ncells
         scmap_cv = ComputeMap(Xtraining, Ytraining, Spktraining(:,icell), nXbins, nYbins);
         scmap_cv(isnan(occmap_cv)) = NaN;
         scmap_cv = GaussianSmooth(scmap_cv, [decparams.YsmthNbins decparams.XsmthNbins]);

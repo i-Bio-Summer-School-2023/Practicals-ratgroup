@@ -1,17 +1,23 @@
 function decparams = DefineDecParams(Nav,Spk)
 %Define a set of parameters needed to decode positions from spike trains
 
-%Experimental condition over which the decoder will be trained
-decparams.condition = [1 3 5];
+%Conditions over the fields of Nav over which the decoder will be trained
+%decparams.subset should be a structure where fields have names of the 
+%fields of Nav to which the condition should apply to.
+decparams.subset = [];
 
-%lap type over which the decoder will be trained
-decparams.dir = [-1 1];
+%For instance, for the example data set, we define the following fields
+decparams.subset.Condition = [1 3 5];
+decparams.subset.Condition_op = 'ismember';
 
-%lap types over which the decoder will be trained
-decparams.laptype = [-1 0 1];
+decparams.subset.XDir = [-1 1];
+decparams.subset.XDir_op = 'ismember';
 
-%Minimum speed threshold over which the decoder will be trained
-decparams.spdthreshold = 2.5;
+decparams.subset.laptype = [-1 0 1];
+decparams.subset.laptype_op = 'ismember';
+
+decparams.subset.Spd =  2.5;
+decparams.subset.Spd_op = '>=';
 
 %Subset of cells used for decoding. By default we'll use only pyramidal
 %cells since interneurons with high firing rates can strongly bias the
@@ -28,39 +34,20 @@ decparams.scalingFactor = 1 / decparams.sampleRate;
 %Name of the X variable to decode. Default is Xpos
 decparams.Xvariablename = 'Xpos';
 
-%Range of positions (in cm) over which decoding will be performed, ie over
-%which place fields will be computed
-decparams.Xrange = [0 100];
+%Size of the gaussian window for smoothing tuning curves along X (in bins).
+decparams.XsmthNbins = 1;
 
-%Size of the position bins (in cm).
-decparams.Xbinsize = 4;
-
-%Size of the gaussian window for smoothing place fields (in cm).
-decparams.Xsmthbinsize = 2;
-
-%Size of the gaussian window for smoothing place fields (in bins).
-decparams.XsmthNbins = decparams.Xsmthbinsize / decparams.Xbinsize;
-
-%Edges of position bins used to discretize positions
-decparams.Xbinedges = decparams.Xrange(1):decparams.Xbinsize:decparams.Xrange(2);
+%Edges of bins used to discretize the X variable
+decparams.Xbinedges = 0 : 4: 100;
 
 %Name of the Y variable to decode. Default is XDir.
 decparams.Yvariablename = 'XDir';
 
-%Range of Y over which place fields will be estimated.
-decparams.Yrange = [-2 2];%(check here)
-
-%Size of the Y bins.
-decparams.Ybinsize = 2;%(check here)
-
-%Size of the gaussian window for smoothing place fields along Y
-decparams.Ysmthbinsize = 0;%(check here)
-
-%Size of the gaussian window for smoothing place fields along Y (in bins).
-decparams.YsmthNbins = decparams.Ysmthbinsize / decparams.Ybinsize;%(check here)
+%Size of the gaussian window for smoothing tuning curves along Y (in bins).
+decparams.YsmthNbins = 0;
 
 %Edges of Y bins used to discretize Y
-decparams.Ybinedges = decparams.Yrange(1):decparams.Ybinsize:decparams.Yrange(2);%(check here)
+decparams.Ybinedges = [-2 0 2];
 
 %Occupancy threshold above which positions are included in the place field
 %estimate

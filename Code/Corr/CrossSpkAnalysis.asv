@@ -129,7 +129,7 @@ end
         vars_discrete = cell(1,nVars);
         sz = cellfun(@numel,crossparams.binedges) - 1;
         for i = 1:nVars
-            vars_discrete{i} = discretize(Nav.(crossparams.variablenames{i}), crossparams.binedges{i});
+            vars_discrete{i} = discretize(Nav.(crossparams.variablenames{i})(tidx), crossparams.binedges{i});
         end
         %linearizing the indices across all variables
         varlin_discrete = sub2ind(sz, vars_discrete{:});
@@ -149,12 +149,12 @@ s = RandStream('mt19937ar','Seed',0);
 %speed bins.
 for ishf = 1:crossparams.nShuffle
     %Shuffling spike trains
-    spikeTrainShf = NaN(size(spikeTrain));
+    spikeTrainShf = spikeTrain;
     for k = 1:nbins
         idx = find(varlin_discrete == k);
         for icell = 1:ncells
             idxshf = idx(randperm(s,numel(idx)));
-            spikeTrainShf(idx,icell) = spikeTrain(idxshf,icell);
+            spikeTrainShf(idx,icell) = spikeTrainShf(idxshf,icell);
         end
     end
 

@@ -1,9 +1,9 @@
 function GLMs = GLMAnalysis(Nav, Srep, glmsparams)
 % GLMs = GLMAnalysis(Nav, Srep, glmsparams)
-% Estimates tuning curves for up to two variables using a Poisson GLM
+% Estimates tuning curves to position and running speed using a Poisson GLM
 % model. Model comparison is performed by comparing the likelihood of fitted
-% data. This function computes GLMs for single-variable models and for the
-% full models, performs k-fold cross-validation, and evaluates
+% data. This function computes GLMs for position-only, speed-only, and
+% position x speed models, performs k-fold cross-validation, and evaluates
 % model significance.
 %
 % Inputs:
@@ -22,19 +22,19 @@ function GLMs = GLMAnalysis(Nav, Srep, glmsparams)
 %       - LLH: Log likelihood values for different models (position, speed,
 %         position x speed) for each cell.
 %       - LLH_cst: Log likelihood values for constant mean model for each cell.
-%       -tuning: a array of structures with as many elements as the number
-%       of input variable (max 2 in this code). tuning has the following
-%       fields:
-%               * bincenters: Bin centers for the corresponding variable.
-%               * map: tuning curves for selected cells along the corresponding variable.
-%               * mapcv: Cross-validated tuning curves.
-%               * map_SE: Standard error estimates for tuning curves (based on
-%                k-fold cross-validation).
-%               * pval: P-values indicating significance of adding varaible to the model.
+%       -tuning: a array of structures with 
+%       - Xbincenters: Bin centers for position tuning curves.
+%       - Spdbincenters: Bin centers for speed tuning curves.
+%       - map: Position tuning curves for selected cells.
+%       - mapcv: Cross-validated position tuning curves.
+%       - map_SE: Standard error estimates for position tuning curves based on
+%         k-fold cross-validation.
+%       - pval: P-values indicating significance of adding position to the model.
 %       
+
 %
 % Example usage:
-%   glmsparams = SetGLMsParams(Nav, Spk);
+%   glmsparams = DefineGLMsParams(Nav, Spk);
 %   GLMs = GLMAnalysis(Nav, Srep, glmsparams);
 %
 % See also: glmnet, crossvalPartition, GaussianSmooth, computeLLH_poisson
@@ -77,27 +77,19 @@ options.maxit = glmsparams.maxit;
 options.thresh = glmsparams.thresh;
 %%
 
-%If no X2 variable are indicated in glmsparams, we'll just compute single
-%variable model
-if ~isempty(glmsparams.variablename{1})
-    X1 = Nav.(glmsparams.variablename{1});
-else
-    X1 = ones(size(Nav.sampleTimes));
-    glmsparams.binedges{1} = 1;
-    glmsparams.smthNbins{1} = 0;
-end
+%Copy of the X variable of interest from the input structure (Nav)
+X1 = Nav.(glmsparams.variablename{1});
 
-%If no X2 variable are indicated in glmsparams, we'll just compute single
-%variable model
+%If no X2 variable are indicated in glmsparams, we'll just compute
 if ~isempty(glmsparams.variablename{2})
     X2 = Nav.(glmsparams.variablename{2});
 else
-    X2 = ones(size(Nav.sampleTimes));
-    glmsparams.binedges{2} = 1;
-    glmsparams.smthNbins{2} = 0;
+    X2 = ones(size(X));
+    glmsparams.Ybinedges = 1;
+    glmsparams.YsmthNbins = 0;
 end
 
-%Selecting time indices over which to estimate GLMs, according to parameters
+%Selecting time indices over which to compute maps, according to parameters
 %defined in glmsparams.subset
 tidx = true(size(X1));
 pnames = fieldnames(glmsparams.subset);

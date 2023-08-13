@@ -14,9 +14,9 @@ function Maps = MapsAnalysis(Nav, Srep, mapsparams)
 % 
 %   Outputs:
 %   - Maps: Struct containing place field analysis results, including fields such as:
-%     * mapXY: Two-dimensional place fields
-%     * mapXY_cv: Two-dimensional place fields estimated using k-fold cross-validation
-%     * mapXY_SE: Jackknife estimate of standard error for place fields
+%     * map: Two-dimensional place fields
+%     * map_cv: Two-dimensional place fields estimated using k-fold cross-validation
+%     * map_SE: Jackknife estimate of standard error for place fields
 %     * mapsparams: Structure of parameters used for analysis
 %     * Xbincenters: Bin centers along X-axis
 %     * Ybincenters: Bin centers along Y-axis
@@ -52,21 +52,27 @@ function Maps = MapsAnalysis(Nav, Srep, mapsparams)
 % 
 % See also: ComputeMap, GaussianSmooth, computeEV, computeLLH_normal,
 %           crossvalPartition, getSpatialinfo, getSparsity, getSelectivity,
-%           FieldDirectionality, lratiotest (requires econometrix toolbox).
+%           FieldDirectionality, lratiotest (requires econometrics toolbox).
 % 
 % written by J.Fournier 08/2023 for the iBio Summer school
 %
 
 %%
 
-%Copy of the X variable of interest from the input structure (Nav)
-X = Nav.(mapsparams.Xvariablename);
+%If no Y variable are indicated in mapsparams, we'll just compute a 1D map
+if ~isempty(mapsparams.Xvariablename)
+    X = Nav.(mapsparams.Xvariablename);
+else
+    X = ones(size(Nav.sampleTimes));
+    mapsparams.Xbinedges = 1;
+    mapsparams.XsmthNbins = 0;
+end
 
 %If no Y variable are indicated in mapsparams, we'll just compute a 1D map
 if ~isempty(mapsparams.Yvariablename)
     Y = Nav.(mapsparams.Yvariablename);
 else
-    Y = ones(size(X));
+    Y = ones(size(Nav.sampleTimes));
     mapsparams.Ybinedges = 1;
     mapsparams.YsmthNbins = 0;
 end
@@ -177,18 +183,22 @@ SparsityIndex_Shf = NaN(ncells, mapsparams.nShuffle);
 SelectivityIndex_Shf = NaN(ncells, mapsparams.nShuffle);
 DirectionalityIndex_Shf = NaN(ncells, mapsparams.nShuffle);
 %Initializing the random number generator for reproducibility purposes
-s = RandStream('mt19937ar','Seed',0);
+nShf = mapsparams.nShuffle;
 %Calculating the place field for each shuffle permutation
-for iperm  = 1:mapsparams.nShuffle
-    tshift = randi(s,ntimepts - 2 * mapsparams.sampleRate) + 1 * mapsparams.sampleRate;%(Check here)
-    X_discrete_shf = circshift(X_discrete, round(tshift));%(Check here)
-    Y_discrete_shf = circshift(Y_discrete, round(tshift));%(Check here)
-    for icell = 1:ncells
+parfor icell = 1:ncells
+    s = RandStream('mt19937ar','Seed',icell);
+    for iperm  = 1:nShf
+        %Shifting X and Y by a random amount larger than 1 second
+        tshift = randi(s,ntimepts - 2 * mapsparams.sampleRate) + 1 * mapsparams.sampleRate;
+        X_discrete_shf = circshift(X_discrete, round(tshift));
+        Y_discrete_shf = circshift(Y_discrete, round(tshift));
+        
+        %Computing maps after shuffling
         scmap_shf = ComputeMap(X_discrete_shf, Y_discrete_shf, spikeTrain(:,icell), nXbins, nYbins);
         scmap_shf(isnan(occmap)) = NaN;
         scmap_shf = GaussianSmooth(scmap_shf, [mapsparams.YsmthNbins mapsparams.XsmthNbins]);
         mapX_shf = scmap_shf ./ occmap;
-        
+
         %saving only the spatial selectivity metrics for each permutation
         SI_Shf(icell,iperm) = getSpatialinfo(mapX_shf(:), occmap(:));
         SparsityIndex_Shf(icell,iperm) = getSparsity(mapX_shf(:), occmap(:));
@@ -229,7 +239,7 @@ for i = 1:mapsparams.kfold
     
     %Computing the spike count map and place field of each cell for the
     %current fold
-    for icell = 1:ncells
+    parfor icell = 1:ncells
         scmap_cv = ComputeMap(Xtraining, Ytraining, Spktraining(:,icell), nXbins, nYbins);
         scmap_cv(isnan(occmap_cv)) = NaN;
         scmap_cv = GaussianSmooth(scmap_cv, [mapsparams.YsmthNbins mapsparams.XsmthNbins]);
@@ -296,7 +306,11 @@ mapXY_SE = sqrt((mapsparams.kfold - 1)./mapsparams.kfold * sum((mapXY_cv - mapXY
 mapsparams.tidx = tidx;
 Maps.mapsparams = mapsparams;
 
-Maps.Xbincenters = mapsparams.Xbinedges(1:end-1) + diff(mapsparams.Xbinedges) / 2;
+if nXbins > 1
+    Maps.Xbincenters = mapsparams.Xbinedges(1:end-1) + diff(mapsparams.Xbinedges) / 2;
+else
+    Maps.Xbincenters = 1;
+end
 if nYbins > 1
     Maps.Ybincenters = mapsparams.Ybinedges(1:end-1) + diff(mapsparams.Ybinedges) / 2;
 else
@@ -305,19 +319,19 @@ end
 
 %Interpolating in case there are infinite values among the bin edges
 %(probably at the beginiing or end in order to clamp de signal)
-if nXbins > 1
+if nXbins > 1 && sum(~isinf(Maps.Xbincenters)) > 0
     xb = 1:nXbins;
-    Maps.Xbincenters = interp1(xb(~isinf(Maps.Xbincenters)), Maps.Xbincenters, xb, 'linear', 'extrap');
+    Maps.Xbincenters = interp1(xb(~isinf(Maps.Xbincenters)), Maps.Xbincenters(~isinf(Maps.Xbincenters)), xb, 'linear', 'extrap');
 end
-if nYbins > 1
+if nYbins > 1 && sum(~isinf(Maps.Ybincenters)) > 0
     yb = 1:nYbins;
-    Maps.Ybincenters = interp1(yb(~isinf(Maps.Ybincenters)), Maps.Ybincenters, yb, 'linear', 'extrap');
+    Maps.Ybincenters = interp1(yb(~isinf(Maps.Ybincenters)), Maps.Ybincenters(~isinf(Maps.Ybincenters)), yb, 'linear', 'extrap');
 end
 
 ncells_orig = size(Srep, 2);
-Maps.mapXY = NaN(ncells_orig, nYbins, nXbins);
-Maps.mapXY_cv = NaN(ncells_orig, nYbins, nXbins, mapsparams.kfold);
-Maps.mapXY_SE = NaN(ncells_orig, nYbins, nXbins);
+Maps.map = NaN(ncells_orig, nYbins, nXbins);
+Maps.map_cv = NaN(ncells_orig, nYbins, nXbins, mapsparams.kfold);
+Maps.map_SE = NaN(ncells_orig, nYbins, nXbins);
 Maps.occmap = NaN(1, nYbins, nXbins);
 Maps.SI = NaN(ncells_orig, 1);
 Maps.SparsityIndex = NaN(ncells_orig, 1);
@@ -333,9 +347,9 @@ Maps.LLH = NaN(ncells_orig,1);
 Maps.LLH_cst = NaN(ncells_orig,1);
 Maps.LLH_pval = NaN(ncells_orig,1);
 
-Maps.mapXY(cellidx,:,:,:) = mapXY;
-Maps.mapXY_cv(cellidx,:,:,:) = mapXY_cv;
-Maps.mapXY_SE(cellidx,:,:) = mapXY_SE;
+Maps.map(cellidx,:,:,:) = mapXY;
+Maps.map_cv(cellidx,:,:,:) = mapXY_cv;
+Maps.map_SE(cellidx,:,:) = mapXY_SE;
 Maps.occmap = occmap;
 Maps.SI(cellidx,:) = SI;
 Maps.SparsityIndex(cellidx,:) = SparsityIndex;
