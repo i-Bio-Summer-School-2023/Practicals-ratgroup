@@ -1,7 +1,0 @@
-function SInfoperspike = SpatialInfo(map, occmap)
-%Computes the spatial information in tuning curve t, considering an
-%occupancy o. 
-meanRate = nansum(map .* occmap/nansum(occmap));
-SInfo = nansum(occmap/nansum(occmap).*map.*log2(map/meanRate));
-SInfoperspike = SInfo/meanRate;
-end

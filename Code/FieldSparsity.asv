@@ -1,6 +1,0 @@
-function sparsityIndex = FieldSparsity(map, occmap)
-%Computes the selectivity of a tuning curve t given an occupancy o as:
-%1 - sparsity index. The spars as defined by Jung, Wiener and McNaughton (JNS, 1994). 
-%Closer to one means sparser.
-sparsityIndex = 1 - nansum(map(:).*occmap(:)/nansum(occmap(:))).^2/nansum(map(:).^2.*occmap(:)/nansum(occmap(:)));
-end
