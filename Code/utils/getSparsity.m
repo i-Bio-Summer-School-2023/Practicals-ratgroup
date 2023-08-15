@@ -18,9 +18,21 @@ function sparsityIndex = getSparsity(t, o)
 % sparsityIndex = getSparsity(t, o);
 %
 %
-% Written by J.Fournier 08/2023 for the iBio Summer school
+% Written by J. Fournier in 08/2023 for the Summer school
+% "Advanced computational analysis for behavioral and neurophysiological 
+% recordings"
+%%
 
+%vectorizing to make sure t and o have the same shape
+t = t(:);
+o = o(:);
 
-sparsityIndex = 1 - nansum(t(:).*o(:)/nansum(o(:))).^2/nansum(t(:).^2.*o(:)/nansum(o(:)));
+%Excluding values where either t or o are missing
+valididx = ~isnan(t) & ~isnan(o);
+t = t(valididx);
+o = o(valididx);
+
+%Calculating the sparsity index
+sparsityIndex = 1 - sum(t(:) .* o(:) / sum(o(:))).^2 / sum(t(:).^2 .* o(:) / sum(o(:)));
 
 end

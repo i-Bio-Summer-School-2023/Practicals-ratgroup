@@ -1,62 +1,62 @@
 function Maps = MapsAnalysis(Nav, Srep, mapsparams)
 % MapsAnalysis - Estimates two-dimensional place fields and their significance.
-% 
+%
 %   Maps = MapsAnalysis(Nav, Srep, mapsparams)
-% 
-%   This function estimates two-dimensional maps and their significance
-%   using either shuffling or model comparison on cross-validated predictions.
-% 
-%   Inputs:
-%   - Nav: Struct containing navigation-related data variables on which
-%   responses should be mapped onto
-%   - Srep: array of responses (ntimes x ncells)
+%
+%   This function estimates two-dimensional maps and their significance using either
+%   shuffling or model comparison on cross-validated predictions.
+%
+%   INPUTS:
+%   - Nav: A structure containing at least a field called 'sampleTimes' with
+%   the sample times of the data and some additional fields with the
+%   explanatory variables
+%   - Srep: Array of responses (ntimes x ncells).
 %   - mapsparams: Struct containing parameters for place field estimation.
-% 
-%   Outputs:
+%
+%   OUTPUT:
 %   - Maps: Struct containing place field analysis results, including fields such as:
-%     * map: Two-dimensional place fields
-%     * map_cv: Two-dimensional place fields estimated using k-fold cross-validation
-%     * map_SE: Jackknife estimate of standard error for place fields
+%     * map: Two-dimensional place fields (ncells x nYbins x nXbins array)
+%     * map_cv: Two-dimensional place fields estimated using k-fold 
+%       cross-validation (ncells x nYbins x nXbins x k-fold array)
+%     * map_SE: Jackknife estimate of standard error for place fields, 
+%       (ncells x nYbins x nXbins array)
 %     * mapsparams: Structure of parameters used for analysis
 %     * Xbincenters: Bin centers along X-axis
 %     * Ybincenters: Bin centers along Y-axis
-%     * occmap: Occupancy map, a nYbins x nXbins arrays (scaled by
-%       mapsparams.scalingFactor)
-%     * SI: Spatial information
+%     * occmap: Occupancy map, a nYbins x nXbins arrays (scaled by mapsparams.scalingFactor)
+%     * SI: Spatial information for each cell (ncells x 1 array).
 %     * SparsityIndex: Sparsity index for each cell.
 %     * SelectivityIndex: Selectivity index for each cell.
 %     * DirectionalityIndex: Directionality index for each cell.
-%     * SI_pval: P-values for spatial information, based on
-%       shuffle controls
-%     * SparsityIndex_pval: P-values for sparsity index, based on
-%       shuffle controls
-%     * SelectivityIndex_pval: P-values for selectivity index, based on
-%       shuffle controls
-%     * DirectionalityIndex_pval: P-values for directionality index, based on
-%       shuffle controls
-%     * EV: cross-validated percentage of explained variance from place field model
-%     * EV_cst: cross-validated percentage of explained variance from constant mean model
-%     * LLH: cross-validated Log likelihood from place field model
-%     * LLH_cst: cross-validated Log likelihood from constant mean model
-%     * LLH_pval: P-values  for model comparison from likelihood ratio test
-% 
-%   Usage:
+%     * SI_pval: P-values for spatial information, based on shuffle controls
+%     * SparsityIndex_pval: P-values for sparsity index, based on shuffle controls
+%     * SelectivityIndex_pval: P-values for selectivity index, based on shuffle controls
+%     * DirectionalityIndex_pval: P-values for directionality index, based on shuffle controls
+%     * EV: Cross-validated percentage of explained variance from place field model
+%     * EV_cst: Cross-validated percentage of explained variance from constant mean model
+%     * LLH: Cross-validated Log likelihood from place field model
+%     * LLH_cst: Cross-validated Log likelihood from constant mean model
+%     * LLH_pval: P-values for model comparison from likelihood ratio test
+%
+%   USAGE:
 %    Nav = LoaddataNav(loadparams);
 %    Spk = LoaddataSpk(loadparams, Nav.sampleTimes);
 %    Srep = Spk.spikeTrain;
-%    mapsparams = SetMapsParams(Nav,Spk);
+%    mapsparams = SetMapsParams(Nav,Srep);
 %
-%    %change parameters of mapsparams here if needed
+%    % Change parameters of mapsparams here if needed. For instance
+%    mapsparams.Yvariablename = [];%compute 1D maps along X variable.
 %
-%    Maps2D = MapsAnalysis(Nav, Spk.spikeTrain, mapsparams);
-% 
-% See also: ComputeMap, GaussianSmooth, computeEV, computeLLH_normal,
-%           crossvalPartition, getSpatialinfo, getSparsity, getSelectivity,
-%           FieldDirectionality, lratiotest (requires econometrics toolbox).
-% 
-% written by J.Fournier 08/2023 for the iBio Summer school
+%    Maps = MapsAnalysis(Nav, Spk.spikeTrain, mapsparams);
 %
-
+%   SEE ALSO:
+%   ComputeMap, GaussianSmooth, computeEV, computeLLH_normal, crossvalPartition,
+%   getSpatialinfo, getSparsity, getSelectivity, getDirectionality,
+%   lratiotest (requires econometrics toolbox).
+%
+% Written by J. Fournier in 08/2023 for the Summer school
+% "Advanced computational analysis for behavioral and neurophysiological recordings"
+%
 %%
 
 %If no Y variable are indicated in mapsparams, we'll just compute a 1D map
@@ -167,9 +167,9 @@ SparsityIndex = NaN(ncells, 1);
 SelectivityIndex = NaN(ncells, 1);
 DirectionalityIndex = NaN(ncells, 1);
 for icell = 1:ncells
-        SI(icell) = getSpatialinfo(mapXY(icell,:), occmap(:));
-        SparsityIndex(icell) = getSparsity(mapXY(icell,:), occmap(:));
-        SelectivityIndex(icell) = getSelectivity(mapXY(icell,:));
+    SI(icell) = getSpatialinfo(mapXY(icell,:), occmap(:));
+    SparsityIndex(icell) = getSparsity(mapXY(icell,:), occmap(:));
+    SelectivityIndex(icell) = getSelectivity(mapXY(icell,:));
     if nYbins == 2
         DirectionalityIndex(icell) = getDirectionality(mapXY(icell,1,:), mapXY(icell,2,:));
     end
@@ -295,7 +295,9 @@ LLH_pval = NaN(ncells,1);
 goodidx = LLH > LLH_cst;
 LLH_pval(~goodidx) = 1;
 dof = sum(occmap(:) > 0) - 1;
-[~, LLH_pval(goodidx)] = lratiotest(LLH(goodidx), LLH_cst(goodidx), dof);
+if sum(goodidx) > 0
+    [~, LLH_pval(goodidx)] = lratiotest(LLH(goodidx), LLH_cst(goodidx), dof);
+end
 
 
 %Computing a Jacknife estimate of the standard error

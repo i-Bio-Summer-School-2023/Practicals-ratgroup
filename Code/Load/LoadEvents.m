@@ -1,18 +1,28 @@
 function events = LoadEvents(filepath)
-%Load the .evt file located at filepath.
+% LoadEvents - Load and parse event data from a .evt file.
 %
-%INPUT:
-% - filepath: full path to the .evt file.
-%OUTPUT:
-% A structure with the following fields:
-% - timestamps: a list of timestamps in seconds
-% - description: a cell array of string describing each timestamps
+%   events = LoadEvents(filepath) loads event data from the specified .evt
+%   file located at the given filepath. The function returns a MATLAB
+%   structure containing timestamps and descriptions of the events.
 %
-% Usage:
-% events = LoadEvents(filepath);
+% INPUT:
+%   filepath - Full path to the .evt file.
 %
+% OUTPUT:
+%   events - MATLAB structure with the following fields:
+%     * timestamps - A list of timestamps in seconds.
+%     * description - A cell array of strings describing each timestamp.
 %
-% by J. Fournier 07/2023
+% USAGE:
+%   events = LoadEvents(filepath);
+%
+% SEE ALSO:
+%   LoaddataNav, LoaddataSpk, LoaddataLfp, SetLoadParams
+%
+% Written by J. Fournier in 08/2023 for the Summer school
+% "Advanced computational analysis for behavioral and neurophysiological 
+% recordings"
+
 
 f = fopen(filepath,'r');
 events.timestamps = [];

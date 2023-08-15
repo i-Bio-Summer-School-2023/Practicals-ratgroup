@@ -1,10 +1,13 @@
-function glmsparams = SetGLMsParams(Nav,Spk)
+function glmsparams = SetGLMsParams(Nav,Srep)
 % Define a set of parameters needed to estimate Generalized Linear Models (GLMs)
-% using GLMAnalyses or GLMAnalysesCV functions.
+% using GLMAnalysis.
 %
 % Inputs:
-%   Nav: Structure containing navigation-related data (e.g., spatial positions, speeds)
-%   Spk: Structure containing spike train data
+% - Nav: A structure containing at least a field called 'sampleTimes' with
+%   the sample times of the data and some additional fields with the
+%   explanatory variables
+% - Srep: array of responses (ntimes x ncells) from which GLMs will be
+%   estimated
 %
 % Outputs:
 %   glmsparams: Structure containing the defined GLM parameters
@@ -39,11 +42,17 @@ function glmsparams = SetGLMsParams(Nav,Spk)
 %   - pval_th: P-value threshold for considering a predictor as significantly contributing to the cell response.
 %
 % USAGE:
-%   glmsparams = SetGLMsParams(Nav, Spk);
+%    Nav = LoaddataNav(loadparams);
+%    Spk = LoaddataSpk(loadparams, Nav.sampleTimes);
+%    Srep = Spk.spikeTrain;
+%    glmsparams = SetGLMsParams(Nav, Srep);
+%
+% See also: GLMAnalysis
 %
 % Note: Modify the values of the fields as needed for your analysis.
 %
-% written by J.Fournier 08/2023 for the iBio Summer school
+% Written by J. Fournier in 08/2023 for the Summer school
+% "Advanced computational analysis for behavioral and neurophysiological recordings"
 
 
 %Conditions over the fields of Nav for which place fields will be estimated
@@ -65,7 +74,7 @@ glmsparams.subset.Spd =  2.5;
 glmsparams.subset.Spd_op = '>=';
 
 %Subset of cells for which GLMs will be computed
-glmsparams.cellidx = true(1, size(Spk.spikeTrain, 2));
+glmsparams.cellidx = true(1, size(Srep, 2));
 
 %Sampling rate of the data
 glmsparams.sampleRate = 1 / nanmean(diff(Nav.sampleTimes));

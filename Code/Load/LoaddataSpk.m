@@ -1,56 +1,53 @@
 function Spk = LoaddataSpk(loadparams, sampleTimes)
 % Spk = LoaddataSpk(loadparams, sampleTimes)
 %
-%Load spiking data into Spk structure, resampled according to timestamps
-%provided in sampleTimes and other parameters defined in loadparams. See
-%DefineLoadParams.m for a description of those parameters.
+% Load spiking data into a MATLAB structure, resampled according to timestamps
+% provided in sampleTimes and other parameters defined in loadparams. See
+% SetLoadParams.m for a description of those parameters.
+% Typically, the output structure should contain a field called sampleTimes
+% containing the timestamps of resampled spike counts, the ntimes x ncells
+% array of spike counts resampled according to sampleTimes and a 1 x ncells
+% cell array containing the list of spike times (in seconds) for each cell.
 %
 % INPUT:
-% - loadparams:  a structure whose fields contain the parameters necessary
-% to load the spiking data data and resample them.
-% See DefineLoadParams.m for a description of these parameters.
+% - loadparams: a structure whose fields contain the parameters necessary
+%   to load the spiking data data and resample them.
+%   See SetLoadParams.m for a description of these parameters.
+% - sampleTimes: time stamps of the resampled spike trains
 %
 % OUTPUT:
-% - Spk: a matlab structure which fields contain the different types of
-% behavioral data resampled at the desired sampling rate (defined in
-% loadparams.samplingRate).
+% - Spk: a MATLAB structure whose fields contain the different types of
+%   spiking data resampled at the desired sampling rate (defined in
+%   loadparams.samplingRate).
 %
 % Fields of Spk are the following:
 % - sampleTimes: time stamps of the resampled spike trains
-%
-% - spikeTimes: a ntimes x 1 array of all spike times
-%
-% - spikeID: cluster IDs of spikes in spikeTimes
-%
-% - spikeTrain: a nTimes x nCells array of spike counts in bins centered
-% around sample times of Spk.sampleTimes
-%
+% - spikeTimes: an 1 x ncells cell array containing the spike times of each
+%   neuron
+% - spikeTrain: an nTimes x nCells array of spike counts in bins centered
+%   around sample times of Spk.sampleTimes
 % - shankID: 1 x nCells array of ID of the shank where each cluster was 
-% recorded
-%
+%   recorded
 % - PyrCell: 1 x nCells logical array. true if the cluster is a putative
-% Pyramidal neuron
-%
+%   Pyramidal neuron
 % - IntCell: 1 x nCells logical array. true if the cluster is a putative
-% interneuron
-%
+%   interneuron
 % - hpcCell: 1 x nCells logical array. true if the cluster is in hpc
-%
 % - blaRCell: 1 x nCells logical array. true if the cluster is in right bla
-%
 % - blaLCell: 1 x nCells logical array. true if the cluster is in left bla
-%
-% - ripple: ntimes x 1 array with ones wherever there is a ripple.
-%
-% - ripplepeak: ntimes x 1 array with ones for ripple peaks.
-%
+% - ripple: ntimes x 1 array with ones wherever there is a ripple
+% - ripplepeak: ntimes x 1 array with ones for ripple peaks
 % - rippleTimes: timestamps of the detected ripple peaks (in seconds)
 %
 % USAGE:
-%  Spk = LoaddataSpk(loadparams, sampleTimes)
+% datadirpath = <path to the directory containing your data>
+% loadparams = SetLoadParams(datadirpath);
+% Spk = LoaddataSpk(loadparams, sampleTimes)
 %
+% See also: SetLoadParams, LoaddataNav, LoaddataLfp
 %
-% written by J.Fournier 08/2023 for the iBio Summer school
+% Written by J.Fournier in 08/2023 for the Summer school "Advanced
+% computational analysis for behavioral and neurophysiological recordings"
 
 %%
 %loading spike times and cluster ID from the prepared .mat file
@@ -66,27 +63,28 @@ info = load([loadparams.Datafolder filesep loadparams.spkinfofilename]);
 hpcblaClustidx = ismember(info.IndexType(:,3), loadparams.ShankList);
 
 %Saving spike times and cluster IDs.
-Spk.spikeTimes = S.AllSpikes(:,1);
-Spk.spikeID = S.AllSpikes(:,2);
+spikeTimes = S.AllSpikes(:,1);
+spikeID = S.AllSpikes(:,2);
 
 %Keeping only cells in hpc or bla
-goodspkidx = ismember(Spk.spikeID,find(hpcblaClustidx));
-Spk.spikeTimes = Spk.spikeTimes(goodspkidx);
-Spk.spikeID = Spk.spikeID(goodspkidx);
+goodspkidx = ismember(spikeID,find(hpcblaClustidx));
+spikeTimes = spikeTimes(goodspkidx);
+spikeID = spikeID(goodspkidx);
 
 %convert spike times into an array of spike trains, sampled according to 
 %sampleTimes.
-clustList = unique(Spk.spikeID);
+clustList = unique(spikeID);
 ncells = numel(clustList);
 nTimeSamples = numel(sampleTimes);
 sampleRate = 1 / mean(diff(sampleTimes));
 
 Spk.spikeTrain = zeros(nTimeSamples, ncells);
+Spk.spikeTimes = cell(1,ncells);
 binEdges = [sampleTimes ; max(sampleTimes) + 1/sampleRate];
 
 for icell = 1:ncells
-    s = Spk.spikeTimes(Spk.spikeID == clustList(icell),1);
-    Spk.spikeTrain(:,icell) = histcounts(s, binEdges);
+    Spk.spikeTimes{icell} = spikeTimes(spikeID == clustList(icell),1);
+    Spk.spikeTrain(:,icell) = histcounts(Spk.spikeTimes{icell}, binEdges);
 end
 Spk.sampleTimes = sampleTimes;
 

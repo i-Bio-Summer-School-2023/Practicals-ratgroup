@@ -1,48 +1,59 @@
 function Nav = LoaddataNav(loadparams)
 % Nav = LoaddataNav(loadparams);
 %
-%Load the behavioral data into a matlab structure (Nav), using parameters
-%defined in loadparams to find the raw data file and preprocess the data.
+% Loads the behavioral data into a MATLAB structure, using parameters
+% defined in loadparams to find the raw data file and preprocess the data.
+% Typically, the output structure should contain a field called sampleTimes
+% containing the timestamps of each time sample and a set of fields
+% containing data which will be used as independent/explanatory variables 
+% along which neural responses are investigated.
 %
 % INPUT:
-% - loadparams:  a structure whose fields contain the parameters necessary
+% - loadparams: a structure whose fields contain the parameters necessary
 % to load the behavioral data data and preprocess them.
-% See DefineLoadParams.m for a description of these parameters.
+% See SetLoadParams.m for a description of these parameters.
 %
 % OUTPUT:
-% - Nav: a matlab structure whose fields contain the different types of
+% - Nav: a MATLAB structure whose fields contain different types of
 % behavioral data resampled at the desired sampling rate (defined in
 % loadparams.samplingRate).
 %
 % Fields of Nav are the following:
-% - sampleTimes: time stamps of the samples for behavioral data
-% - X: positions of the animal on the X axis
-% - Y: position of the animal on ht eY axis
-% - Xpos: position along the X axis in percentage of the track length.
-% - XDir: direction of movement along the X axis (+1 for left to right, -1
+% * sampleTimes: time stamps of the samples for behavioral data
+% * X: positions of the animal on the X axis
+% * Y: position of the animal on the Y axis
+% * Xpos: position along the X axis in percentage of the track length.
+% * XDir: direction of movement along the X axis (+1 for left to right, -1
 % for right to left)
-% - Spd: speed of movement
-% - smthSpd: speed smoothed by a box car window
-% - laptype: +1 if the animal went from the left to the right platform; 
-%            -1 if it went from the right one to the left one;
-%             0 if it went back to the same plateform before reaching the
-%            end of the track
-% - uturn: +1 on trial where the animal returned to the same platform; 0
+% * Spd: speed of movement
+% * smthSpd: speed smoothed by a box car window
+% * Condition: experimental condition corresponding to different 
+%   subsessions (1:preprun, 2:presleep, 3:run, 4:postsleep, 5:postrun)
+% * laptype: +1 if the animal went from the left to the right platform;
+%   -1 if it went from the right one to the left one;
+%   0 if it went back to the same platform before reaching the
+%   end of the track
+% * uturn: +1 on trial where the animal returned to the same platform; 0
 % otherwise
-% - trialID: trial number. Trial were defined as any continuous period of 
-%   time where the animal was on the track
-% - reward: +1 when a reward was delivred; 0 othewise.
-% - airpuff: +1 when an air puff was delivred; 0 othewise.
-% - state: +1 for awake; 0 for drowsy; -1 for REM sleep; -2 for slow wave 
-%   sleep
-% - acc: 3-axis accelerometer data (ntimes x 3 array)
+% * trialID: trial number. Trial were defined as any continuous period of
+% time where the animal was on the track
+% * reward: +1 when a reward was delivered; 0 otherwise.
+% * airpuff: +1 when an air puff was delivered; 0 otherwise.
+% * state: +1 for awake; 0 for drowsy; -1 for REM sleep; -2 for slow wave
+% sleep
+% * acc: 3-axis accelerometer data (ntimes x 3 array)
 %
 % All fields of Nav have time along the first dimension.
 %
 % USAGE:
-% Nav = LoaddataNav(loadparams)
+% datadirpath = <path to the directory containing your data>
+% loadparams = SetLoadParams(datadirpath);
+% Nav = LoaddataNav(loadparams);
 %
-% written by J.Fournier in 08/2023 for the iBio Summer school
+% See also: SetLoadParams, LoadEvents, LoaddataSpk, LoaddataLfp
+%
+% Written by J.Fournier in 08/2023 for the Summer school "Advanced
+% computational analysis for behavioral and neurophysiological recordings"
 
 %%
 %loading position data

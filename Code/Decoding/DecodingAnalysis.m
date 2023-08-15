@@ -1,13 +1,14 @@
 function Dec = DecodingAnalysis(Nav, Srep, decparams)
 % Dec = DecodingAnalysis(Nav, Srep, decparams)
-% Decoding up to two behavioral variables from a set of neuron's spike 
-% trains using 2D spatial maps.
-%
+% Decoding up to two variables from a set ofspike trains using 2D spatial 
+% maps.
 %
 % Inputs:
-%   Nav: Structure containing dependent variables (X and Y).
-%   Srep: Spike train data for each neuron (timepoints x neurons).
-%   decparams: Structure with decoding parameters. See DefineDecParams.
+% - Nav: A structure containing at least a field called 'sampleTimes' with
+%   the sample times of the data and some additional fields with the
+%   explanatory variables to decode
+% - Srep: Spike train data for each neuron (ntimes x ncells).
+% - decparams: Structure with decoding parameters. See SetDecParams.
 %
 % Outputs:
 %   Dec: Structure containing decoding results, with the following fields:
@@ -16,8 +17,8 @@ function Dec = DecodingAnalysis(Nav, Srep, decparams)
 %   - nXbins: Number of X bins.
 %   - Ybincenters: Centers of the Y bins.
 %   - nYbins: Number of Y bins.
-%   - mapXY: Place field maps for each cell (ncells x nXbins x nYbins).
-%   - mapXY_cv: Cross-validated place field maps (ncells x nXbins x nYbins x k-fold).
+%   - mapXY: Place field maps for each cell (ncells x nYbins x nXbins).
+%   - mapXY_cv: Cross-validated place field maps (ncells x nYbins x nXbins x k-fold).
 %   - occmap: Occupancy map used for decoding.
 %   - X: Discretized X values.
 %   - Y: Discretized Y values.
@@ -33,13 +34,21 @@ function Dec = DecodingAnalysis(Nav, Srep, decparams)
 %   - Ydecmat: Confusion matrix for Y over training set variables.
 %
 %
-% Usage:
-%   Dec = DecodingAnalysis(Nav, Srep, decparams)
+% USAGE:
+%    Nav = LoaddataNav(loadparams);
+%    Spk = LoaddataSpk(loadparams, Nav.sampleTimes);
+%    Srep = Spk.spikeTrain;
+%    decparams = SetDecParams(Nav, Srep);
+%    %change parameters in decparams here if needed. For instance:
+%    %decparams.Yvariablename = []; % for 1D decoding along X only
+%    Dec = DecodingAnalysis(Nav, Srep, decparams)
 %
 % See Also:
 %   ComputeBayesMAP, crossvalPartition, GaussianSmooth, ComputeMap
 %
-% Written by J. Fournier in 08/2023 for the iBio Summer school.
+% Written by J Fournier in 08/2023 for the Summer school
+% "Advanced computational analysis for behavioral and neurophysiological 
+% recordings"
 %%
 
 %If no X variable are indicated, we'll just compute a 1D place field

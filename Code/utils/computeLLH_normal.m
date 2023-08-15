@@ -20,10 +20,13 @@ function [LLH, BIC, AIC] = computeLLH_normal(y, ypred, k)
 % [LLH, BIC, AIC] = computeLLH_normal(y, ypred, k);
 %
 %
-% Written by J.Fournier 08/2023 for the iBio Summer school
+% Written by J. Fournier in 08/2023 for the Summer school
+% "Advanced computational analysis for behavioral and neurophysiological 
+% recordings"
 %%
 %std of the model
 s = nanstd((y - ypred), 1);
+
 %probability density function for a normal distribution with std = s.
 pdfun = normpdf(y, ypred, s);
 pdfun(pdfun == 0) = eps;

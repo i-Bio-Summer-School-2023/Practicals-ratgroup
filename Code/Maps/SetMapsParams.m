@@ -1,68 +1,63 @@
-function mapsparams = SetMapsParams(Nav,Spk)
-% mapsparams = SetMapsParams(Nav,Spk)
+function mapsparams = SetMapsParams(Nav,Srep)
+% SetMapsParams - Define parameters for computing place fields.
 %
-%Define a set of parameters needed to compute place fields.
+%   mapsparams = SetMapsParams(Nav, Srep) defines a set of parameters
+%   required for computing place fields.
 %
 % INPUTS:
-% - Nav: a structure with at least a field called sampleTimes containing
-% sample times of the data from which maps will be computed.
-% - Spk: a structure with at least a field called spikeTrain containing the
-% time sereis of responses that will be mapped.
+% - Nav: A structure containing at least a field called 'sampleTimes' with
+%   the sample times of the data and some additional fields with the
+%   explanatory variables.
+% - Srep: Array of responses (ntimes x ncells) from which place fields will be
+%   estimated.
 %
 % OUTPUT:
-%  - mapsparams: a structure whose fields contain parameters to run
-%  MapsAnalyses.
+% - mapsparams: A structure containing parameters for running MapsAnalyses.
 %
-% Fields of mapsparams are the following:
+% Fields of mapsparams are as follows:
 %
-% subset: a structure where field names correspond to the name of the
-% fields in Nav that we want to apply the condition on. Fields of subset
-% define the value of these field of Nav that will be used to subset the
-% data. For instance, if we want to subset data corresponding to
-% Nav.Condition = 1 or 3 and Nav.Spd >= 5, mapsparams.subset should be
-% defined as:
-% mapsparams.subset.Condition = [1 3];
-% mapsparams.subset.Condition_op = 'ismember';
-% mapsparams.subset.Spd = 5;
-% mapsparams.subset.Spd_op = '>=';
-% 
-% cellidx: A logical array indicating a subset of cells for which place 
-% fields will be computed.
-% 
-% sampleRate: The sampling rate of the data (in Hz).
-% 
-% scalingFactor: A scaling factor applied to the response data, typically 
-% set to 1 / samplingRate to convert spiking data to spikes per second.
-% 
-% Xvariablename: The name of the independent variable used to map the 
-% response along the X-axis.
-% 
-% XsmthNbins: The number of bins used for smoothing place fields along the 
-% X-axis.
-% 
-% Xbinedges: The edges of position bins used to discretize the X-axis.
-% 
-% Yvariablename: The name of the independent variable used to map the 
-% response along the Y-axis.
-% 
-% YsmthNbins: The number of bins used for smoothing place fields along the 
-% Y-axis.
-% 
-% Ybinedges: The edges of position bins used to discretize the Y-axis.
-% 
-% occ_th: An occupancy threshold in seconds above which positions are 
-% included in the place field estimate.
-% 
-% nspk_th: The minimal number of spikes required to consider a cell.
-% 
-% nShuffle: The number of shuffle controls performed for randomization.
-% 
-% kfold: The number of folds considered for cross-validation.
+%   subset: A structure where field names correspond to the names of the
+%           fields in Nav on which conditions will be applied. Fields of
+%           subset define the values of these fields of Nav to subset the data.
+%           For instance, to subset data corresponding to Nav.Condition = 1
+%           or 3 and Nav.Spd >= 5, mapsparams.subset should be defined as:
+%           mapsparams.subset.Condition = [1 3];
+%           mapsparams.subset.Condition_op = 'ismember';
+%           mapsparams.subset.Spd = 5;
+%           mapsparams.subset.Spd_op = '>=';
+%
+%   cellidx: A logical array indicating a subset of cells for which place
+%            fields will be computed.
+%   sampleRate: The sampling rate of the data (in Hz).
+%   scalingFactor: A scaling factor applied to the response data, typically
+%                  set to 1 / samplingRate to convert spiking data to spikes per second.
+%   Xvariablename: The name of the independent variable used to map the
+%                  response along the X-axis.
+%   XsmthNbins: The number of bins used for smoothing place fields along the
+%               X-axis.
+%   Xbinedges: The edges of position bins used to discretize the X-axis.
+%   Yvariablename: The name of the independent variable used to map the
+%                  response along the Y-axis.
+%   YsmthNbins: The number of bins used for smoothing place fields along the
+%               Y-axis.
+%   Ybinedges: The edges of position bins used to discretize the Y-axis.
+%   occ_th: An occupancy threshold above which positions are
+%           included in the place field estimate (typically in seconds if 
+%           scalingFactor is 1 / samplingRate)
+%   nspk_th: The minimum number of spikes required to consider a cell.
+%   nShuffle: The number of shuffle controls performed for randomization.
+%   kfold: The number of folds considered for cross-validation.
 %
 % USAGE:
-% mapsparams = SetMapsParams(Nav,Spk)
+%    Nav = LoaddataNav(loadparams);
+%    Spk = LoaddataSpk(loadparams, Nav.sampleTimes);
+%    Srep = Spk.spikeTrain;
+%    mapsparams = SetMapsParams(Nav, Srep);
 %
-% written by J.Fournier 08/2023 for the iBio Summer school
+% Written by J. Fournier in 08/2023 for the Summer school
+% "Advanced computational analysis for behavioral and neurophysiological 
+% recordings"
+%%
 
 %Conditions over the fields of Nav for which place fields will be estimated
 %mapsparams.subset should be a structure where fields have names of the 
@@ -83,7 +78,7 @@ mapsparams.subset.Spd =  2.5;
 mapsparams.subset.Spd_op = '>=';
 
 %Subset of cells for which place fields will be computed
-mapsparams.cellidx = true(1, size(Spk.spikeTrain, 2));
+mapsparams.cellidx = true(1, size(Srep, 2));
 
 %Sampling rate of the data
 mapsparams.sampleRate = 1 / nanmean(diff(Nav.sampleTimes));

@@ -1,35 +1,46 @@
 function Pat = PatternAnalysis(Nav, Srep, pattparams)
 % PatternAnalysis - Identify cell assemblies in Srep, based on independent component analysis.
 %
+%   Pat = PatternAnalysis(Nav, Srep, pattparams) identifies cell assemblies
+%   in spike response data using independent component analysis (ICA).
 %
-% Pat = PatternAnalysis(Nav, Srep, pattparams)
+% INPUTS:
+% - Nav: A structure containing at least a field called 'sampleTimes' with
+%   the sample times of the data and some additional fields with the
+%   explanatory variables
+% - Srep: Spike train data for each neuron (timepoints x neurons).
+% - pattparams: Structure with pattern analysis parameters. See
+%   SetPattParams for more details.
 %
-% Inputs:
-%   Nav: Structure containing navigation data (timestamps, positions, speeds, etc.).
-%   Srep: Spike train data for each neuron (timepoints x neurons).
-%   pattparams: Structure with pattern analysis parameters.
-%
-% Outputs:
-%   Pat: Structure containing pattern analysis results wtih the following
-%   fields:
+% OUTPUT:
+% - Pat: Structure containing pattern analysis results with the following fields:
 %   - pattparams: Structure of parameters used for pattern detection.
 %   - weights: Weight matrix representing the contribution of each neuron to each assembly pattern.
-%   - cellAssemblies: Logical matrix indicating which neurons belong to each detected cell assemblies.
+%   - cellAssemblies: Logical matrix indicating which neurons belong to each detected cell assembly.
 %   - Sparity: Sparsity measure of each assembly pattern (between 0 and 1).
 %   - strength: Expression strength of each assembly pattern over time.
-%   - activation: events of assembly pattern activation.
+%   - activation: Events of assembly pattern activation.
 %
-% See Also:
-%   fastICA, GaussianSmooth, findpeaks
+% SEE ALSO:
+%   SetPattParams, fastICA, GaussianSmooth, findpeaks
 %
 % Method based on the description in the supplementary information of
 % van de Ven et al., 2016 in Neuron.
 %
+% USAGE:
+%    Nav = LoaddataNav(loadparams);
+%    Spk = LoaddataSpk(loadparams, Nav.sampleTimes);
+%    Srep = Spk.spikeTrain;
+%    pattparams = SetPattParams(Nav, Srep);
+%    %change parameters in pattparams here if needed. For instance:
+%    %pattparams.subset.Condition = [3]; %identification of patterns on specific condition
+%    %pattparams.NoiseCov = true;%subtract signal correlations from covariance matrix
+%    %pattparams.Marcenko = false;%use shuffling procedure instead of Marcenko-Pastur law to select principal components
+%    Pat = PatternAnalysis(Nav, Srep, pattparams)
 %
-% Usage:
-%   Pat = PatternAnalysis(Nav, Srep, pattparams)
-%
-% Written by J. Fournier in 08/2023 for the iBio Summer school.
+% Written by J Fournier in 08/2023 for the Summer school
+% "Advanced computational analysis for behavioral and neurophysiological 
+% recordings"
 
 %%
 %Smoothing the spike train over the coincidence window to get spike counts
@@ -91,11 +102,11 @@ if pattparams.Marcenko
     %Selecting only principal components with an eigenvalue higher than
     %expected according to the Marčenko-Pastur law (see van de Ven et al., 2016).
     eigval_th = (1 + ncells / ntimepts)^2;
-    sigeigidx = find(eigval > eigval_th, 1, 'first'):numel(eigval);
-else
+end
+if ~pattparams.Marcenko || pattparams.NoiseCov
     %The shuffling procedure consists in establishing a distribution of
     %eigenvalues obtained after shuffling time points within bins of the
-    %varaible provided in pattparams.variablenames.
+    %varaibles provided in pattparams.variablenames.
     %We first start by discretizing these variables.
     nVars = numel(pattparams.variablenames);
     if nVars > 0
@@ -145,7 +156,9 @@ else
         %covariance.
         CorrmatSignal = CorrmatSignal + CorrmatShf / pattparams.nShuffle;
     end
-    eigval_th = min(eigval(sum(eigval < eigvalshf, 2) / pattparams.nShuffle <= pattparams.pvalshf_th));
+    if ~pattparams.Marcenko
+        eigval_th = min(eigval(sum(eigval < eigvalshf, 2) / pattparams.nShuffle <= pattparams.pvalshf_th));
+    end
 end
 
 %Indices of eigenvectors to keep.
@@ -157,8 +170,7 @@ sigeigidx = find(eigval > eigval_th, 1, 'first'):numel(eigval);
 %in pattparams.variablenames.
 if pattparams.NoiseCov
     Corrmat(~eye(size(Corrmat))) = Corrmat(~eye(size(Corrmat))) - CorrmatSignal(~eye(size(Corrmat)));
-    [P,D] = eig(Corrmat);
-    eigvalnoise = diag(D);
+    [P,~] = eig(Corrmat);
 end
 
 %Selecting eigenvalues that are above the threshold.

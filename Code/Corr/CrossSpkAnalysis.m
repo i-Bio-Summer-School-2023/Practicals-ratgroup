@@ -1,32 +1,49 @@
 function Cross = CrossSpkAnalysis(Nav, Srep, crossparams)
 % CrossSpkAnalysis - Estimates cross-correlations between responses provided in columns of Srep. 
-% Noise correlations are computed by shuffling across position and speed bins.
-% (Still needs development to allow other independent variables than
-% position and speed)
+% Signal correlations are estimated by shuffling time points within bins of
+% the variables defined in crossparams.variablenames. Trial-by-trial (or
+% noise) correlations are then computed as the overall correlation - the
+% signal correlation (averaged across all shuffles).
 %
-% Usage:
-%   Cross = CrossSpkAnalysis(Nav, Srep, crossparams)
+% INPUTS:
+%   - Nav: A structure containing at least a field called 'sampleTimes' with
+%   the sample times of the data and some additional fields with the
+%   explanatory variables
+%   - Srep: Spike response matrix where each column represents the spike 
+%   counts of a neuron.
+%   - crossparams: Structure containing cross-spike correlation analysis 
+%   parameters (output from DefineCrossSpkParams).
 %
-% Inputs:
-%   Nav: Structure containing navigation data (timestamps, positions, speeds, etc.).
-%   Srep: Spike response matrix where each column represents the spike counts of a neuron.
-%   crossparams: Structure containing cross-spike correlation analysis parameters (output from DefineCrossSpkParams).
-%
-% Outputs:
+% OUTPUTS:
 %   Cross: Structure containing cross-correlation analysis results.
 %
-% Cross-Correlation Analysis Results (within the output structure Cross):
-%   crossparams: Parameters used for cross-correlation analysis.
-%   lagbins: Time bins for the cross-correlation lag.
-%   ccAll: Pair-wise cross-correlation of original signals.
-%   ccNoise: Pair-wise noise correlation (original signals minus shuffle controls).
-%   ccSig: Pair-wise cross-correlation estimated by shuffling.
-%   ccSigSD: Standard deviation of shuffle control cross-correlation.
-%   pval: P-value matrix for the maximum cross-correlation peak.
-%   bestcc: Maximum cross-correlation value.
-%   bestlag: Lag corresponding to the maximum cross-correlation value.
+%   Cross has the following fields:
+%   - crossparams: Parameters used for cross-correlation analysis.
+%   - lagbins: Time bins for the cross-correlation lag.
+%   - ccAll: Pair-wise cross-correlation of original signals.
+%   - ccNoise: Pair-wise noise / trial-by-trial correlations (ccAll - ccSig).
+%   - ccSig: Pair-wise cross-correlation expected from shared selectivity 
+%     to variables indicated in crossparams.variablenames. Signal 
+%     correlations are estimated by shuffling time points wihtin bins of
+%     the explanatory variables
+%   - ccSigSD: Standard deviation of signal cross-correlation estimated by
+%   shuffling within bins of the explanatory variables
+%   - pval: P-value matrix for the maximum cross-correlation peak.
+%   - bestcc: Maximum cross-correlation value.
+%   - bestlag: Lag corresponding to the maximum cross-correlation value.
 %
-% Written by J. Fournier in 08/2023 for the iBio Summer school.
+% USAGE:
+%    Nav = LoaddataNav(loadparams);
+%    Spk = LoaddataSpk(loadparams, Nav.sampleTimes);
+%    Srep = Spk.spikeTrain;
+%    crossparams = SetCrossSpkParams(Nav, Srep);
+%    %change parameters in crossparams here if needed. For instance:
+%    %crossparams.lag = 0.5;
+%    Cross = CrossSpkAnalysis(Nav, Srep, crossparams)
+%
+% Written by J Fournier in 08/2023 for the Summer school
+% "Advanced computational analysis for behavioral and neurophysiological 
+% recordings"
 
 %%
 %Selecting time indices over which correlations will be estimated, 
@@ -121,23 +138,25 @@ end
 %bins of variables indicated in 
 
 %The shuffling procedure consists in establishing a distribution of
-    %eigenvalues obtained after shuffling time points within bins of the
-    %varaible provided in crossparams.variablenames.
-    %We first start by discretizing these variables.
-    nVars = numel(crossparams.variablenames);
-    if nVars > 0
-        vars_discrete = cell(1,nVars);
-        sz = cellfun(@numel,crossparams.binedges) - 1;
-        for i = 1:nVars
-            vars_discrete{i} = discretize(Nav.(crossparams.variablenames{i}), crossparams.binedges{i});
-        end
-        %linearizing the indices across all variables
-        varlin_discrete = sub2ind(sz, vars_discrete{:});
-        nbins = prod(sz);
-    else
-        varlin_discrete = ones(ntimepts, 1);
-        nbins = 1;
+%eigenvalues obtained after shuffling time points within bins of the
+%variables provided in crossparams.variablenames.
+%We first start by discretizing these variables.
+nVars = numel(crossparams.variablenames);
+if nVars > 0
+    vars_discrete = cell(1,nVars);
+    sz = cellfun(@numel,crossparams.binedges) - 1;
+    for i = 1:nVars
+        vars_discrete{i} = discretize(Nav.(crossparams.variablenames{i}), crossparams.binedges{i});
     end
+    %linearizing the indices across all variables, so each bin in the
+    %indexed space corresponds to a specific combination of bins in the
+    %original variable space
+    varlin_discrete = sub2ind(sz, vars_discrete{:});
+    nbins = prod(sz);
+else
+    varlin_discrete = ones(ntimepts, 1);
+    nbins = 1;
+end
 
 %Initializing the cross-correlation matrix for the shuffle controls
 ccSigShf = NaN(ncells, ncells, numel(idxwin), crossparams.nShuffle);

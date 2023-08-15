@@ -1,22 +1,33 @@
 function plot_handle = ciplot(x,lower,upper,colour,alpha)
-
-% ciplot(lower,upper)
-% ciplot(lower,upper,x)
-% ciplot(lower,upper,x,colour)
-% ciplot(lower,upper,x,colour,alpha)
+% ciplot(x,lower,upper)
+% ciplot(x,lower,upper,colour)
+% ciplot(x,lower,upper,colour,alpha)
 %
-% Plots a shaded region on a graph between specified lower and upper confidence intervals (L and U).
-% l and u must be vectors of the same length.
-% Uses the 'fill' function, not 'area'. Therefore multiple shaded plots
-% can be overlayed without a problem. Make them transparent for total visibility.
-% x data can be specified, otherwise plots against index values.
-% colour can be specified (eg 'k'). Defaults to blue.
-% Raymond Reynolds 24/11/06
+% Plots a shaded region on a graph between specified lower and upper confidence
+% intervals.
 %
-% Add: 5th parameter, alpha (Default=50%)
+% INPUT:
+% - x: X data values (optional, default to index values if empty).
+% - lower: Lower confidence interval values (vector).
+% - upper: Upper confidence interval values (vector).
+% - colour: Color of the shaded region (optional, default is [0.5 0.5 0.5]).
+% - alpha: Transparency of the shaded region (optional, default is 0.5).
+%
+% OUTPUT:
+% - plot_handle: Handle to the filled area plot.
+%
+% USAGE:
+% ciplot(x, lower, upper, colour, alpha);
+%
+% Note:
+% - lower and upper vectors must be of the same length.
+% - Multiple shaded plots can be overlaid without problems by using 'fill' 
+%   instead of 'area' and making them transparent.
+%
+% originally created by Raymond Reynolds 24/11/06
+% modified by:
 % Pham Thai Binh 12/06/2017
-%
-% modified by J. Fournier 07/2023
+% J. Fournier 08/2023
 
 if length(lower)~=length(upper)
     error('lower and upper vectors must be same length')

@@ -5,22 +5,22 @@ function output = GaussianSmooth(input, smthNbins)
 %   GaussianSmooth applies Gaussian smoothing to an n-dimensional input array
 %   using a Gaussian kernel.
 %
-%   INPUTS:
-%   input:      n-dimensional array to be smoothed.
-%   smthNbins:  Standard deviations of the Gaussian kernel for each dimension.
+% INPUTS:
+% - input: n-dimensional array to be smoothed.
+% - smthNbins: Standard deviations of the Gaussian kernel for each dimension.
 %
-%   OUTPUT:
-%   output:     Smoothed n-dimensional array of the same size as the input.
+% OUTPUT:
+% - output: Smoothed n-dimensional array of the same size as the input.
 %
-%   USAGE:
-%   output = GaussianSmooth(input, smthNbins);
+% USAGE:
+% output = GaussianSmooth(input, smthNbins);
 %
+% SEE ALSO:
+% ComputeMap, MapsAnalyses
 %
-%   SEE ALSO:
-%   ComputeMap, MapsAnalyses
-%
-%   Written by J. Fournier in August 2023 for the iBio Summer School.
-%
+% Written by J. Fournier in 08/2023 for the Summer school
+% "Advanced computational analysis for behavioral and neurophysiological 
+% recordings"
 %%
 
 %If input is 1D, we make sure it is a column vector.

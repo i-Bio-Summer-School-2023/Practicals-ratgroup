@@ -15,8 +15,10 @@ function selectivityIndex = getSelectivity(t)
 % selectivityIndex = getSelectivity(t);
 %
 %
-% Written by J.Fournier 08/2023 for the iBio Summer school
-
+% Written by J. Fournier in 08/2023 for the Summer school
+% "Advanced computational analysis for behavioral and neurophysiological 
+% recordings"
+%%
 
 selectivityIndex = (max(t(:)) - min(t(:))) / mean(t(:), 'omitnan');
 

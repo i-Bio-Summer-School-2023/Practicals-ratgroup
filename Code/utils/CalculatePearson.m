@@ -1,8 +1,4 @@
 function corr = CalculatePearson(t1,t2,d)
-%corr = CalculatePearson(t1,t2,d) returns the Pearson's correlation between
-%Nd arrays t1 and t2, integrating over dimensions specified in d. 
-%If d is not provided, CalculatePearson operates along the first 
-%non-singleton dimension.
 % CalculatePearson - Compute Pearson's correlation between Nd arrays t1 and t2.
 %
 %   corr = CalculatePearson(t1, t2, d) computes the Pearson's correlation
@@ -18,14 +14,15 @@ function corr = CalculatePearson(t1,t2,d)
 %   corr - Pearson's correlation coefficient.
 %
 % Usage:
-%   corr = CalculatePearson(data1, data2, 2);
+%   corr = CalculatePearson(tuning1, tuning2, 2);
 %
 % Note:
 %   The arrays t1 and t2 should have the same dimensions.
 %
-% See also: corrcoef, corr.
 %
-% written by J.Fournier 08/2023 for the iBio Summer school
+% Written by J. Fournier in 08/2023 for the Summer school
+% "Advanced computational analysis for behavioral and neurophysiological 
+% recordings"
 
 %%
 sz = size(t1);

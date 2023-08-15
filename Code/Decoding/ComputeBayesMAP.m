@@ -1,13 +1,36 @@
 function [XMaxDec, YMaxDec, XMeanDec, YMeanDec] = ComputeBayesMAP(map, spk, dectimewin, mapprior)
-%Computes the decoded position as the maximum or the mean of the posterior
-%probability distribution for 2D models. The posterior probabilities are 
-%computed using a Bayesian approach, assuming independence between spike 
-%trains across cells. Map corresponds to 2D tuning curves of size ncells x 
-%nXbins x nYbins expressed in spikes/second; spk, to the spike count 
-%across time for all cells (ntimes x ncells); dectimewin, to the decoding 
-%window in seconds; mapprior (optional) is the prior distribution of the 
-%decoded variables. By default we assume a flat prior when mapprior is not 
-%provided.
+% ComputeBayesMAP - Computes the decoded position using Bayesian Maximum
+%                  A Posteriori (MAP) or Mean estimates.
+%
+%   [XMaxDec, YMaxDec, XMeanDec, YMeanDec] = ComputeBayesMAP(map, spk, dectimewin, mapprior)
+%   computes the decoded position as the maximum or the mean of the
+%   posterior probability distribution for 2D models. The posterior
+%   probabilities are computed using a Bayesian approach, assuming
+%   independence between spike trains across cells. The function requires
+%   the tuning curve maps, spike counts, decoding time window, and optional
+%   prior distribution.
+%
+% INPUTS:
+% - map: 2D tuning curves (ncells x nYbins x nXbins in spikes/second).
+% - spk: Spike counts across time for all cells (ntimes x ncells).
+% - dectimewin: Decoding window in seconds, corresponding to the time
+%   window used for spike counts.
+% - mapprior (optional): Prior distribution of decoded variables. Default
+%                        is a flat prior.
+%
+% OUTPUTS:
+% - XMaxDec: Decoded X position using the maximum of the posterior.
+% - YMaxDec: Decoded Y position using the maximum of the posterior.
+% - XMeanDec: Decoded X position using the mean of the posterior.
+% - YMeanDec: Decoded Y position using the mean of the posterior.
+%
+% USAGE:
+% [XMaxDec, YMaxDec, XMeanDec, YMeanDec] = ComputeBayesMAP(map, spk, dectimewin, mapprior);
+%
+% Written by J Fournier in 08/2023 for the Summer school
+% "Advanced computational analysis for behavioral and neurophysiological 
+% recordings"
+%%
 
 if nargin < 4
     %if mapprior is not provided, we'll use a flat prior. Units don't
@@ -34,7 +57,7 @@ end
 Posterior = permute(Posterior, [1 3 4 2]);
 
 %Normalizing so to that the sum of probabilities over positions equals 1.
-Posterior = Posterior ./ nansum(Posterior, [2 3]);
+Posterior = Posterior ./ sum(Posterior, [2 3], 'omitnan');
 
 %Taking the decoded position as the maximum of the posterior probability
 %distribution (M.A.P. estimate)
@@ -47,13 +70,13 @@ Posterior = Posterior ./ nansum(Posterior, [2 3]);
 %its posterior probability distribution. We'll compute the mean on the
 %marginal of the posterior distribution along the considered variable.
 %First for the Y variable.
-YPosterior = squeeze(nansum(Posterior, 3)) / 2;
+YPosterior = squeeze(sum(Posterior, 3, 'omitnan')) / 2;
 Ybins = (1:size(Posterior, 2))';
 YPosterior(isnan(YPosterior)) = 0;
 YMeanDec = (YPosterior * Ybins) ./ sum(YPosterior, 2);
 
 %Then for the X variable.
-XPosterior = squeeze(nansum(Posterior, 2)) / 2;
+XPosterior = squeeze(sum(Posterior, 2, 'omitnan')) / 2;
 Xbins = (1:size(Posterior, 3))';
 XPosterior(isnan(XPosterior)) = 0;
 XMeanDec = (XPosterior * Xbins) ./ sum(XPosterior, 2);

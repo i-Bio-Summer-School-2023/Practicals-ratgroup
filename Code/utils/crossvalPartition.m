@@ -1,6 +1,6 @@
 function cv = crossvalPartition(n, kfold)
-% cv = crossvalPartition(n, kfold) returns a struct cv containing k-fold cross-validation
-% partition sets.
+% cv = crossvalPartition(n, kfold) returns a structure containing k-fold cross-validation
+% partition sets where training and test sets are contiguous within each partition.
 %
 % INPUTS:
 % - n: Total number of data points.
@@ -14,8 +14,9 @@ function cv = crossvalPartition(n, kfold)
 % cv = crossvalPartition(n, kfold);
 %
 %
-% Written by J.Fournier 08/2023 for the iBio Summer school
-
+% Written by J. Fournier in 08/2023 for the Summer school
+% "Advanced computational analysis for behavioral and neurophysiological 
+% recordings"
 %%
 cv.trainsets = cell(1,kfold);
 cv.testsets = cell(1,kfold);

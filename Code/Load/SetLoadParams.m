@@ -1,83 +1,63 @@
 function loadparams = SetLoadParams(datadirpath)
-%Define a set of parameters needed to load the data.
+% Define a set of parameters needed to load the data.
 %
-%INTPUT: 
+% INPUT:
 % - datadirpath: path to the directory where data are stored. Default to
 %   '/ Matlab Drive / School / Data' if not provided.
 %
-%OUTPUT:
-% - loadparams: a structure whose fields contain paramters required to call
-% LoaddataNav, LoaddataSpk and LoaddataLfp.
+% OUTPUT:
+% - loadparams: a structure whose fields contain parameters required to call
+%   LoaddataNav, LoaddataSpk, and LoaddataLfp.
 %
 % Fields of loadparams are the following:
 % - animalname: name of the animal.
-%
-% - sessionID: number identiying the session to load.
-%
+% - sessionID: number identifying the session to load.
 % - Datafolder: Path to the folder where the data are located, that is
 %   datadirpath argument.
-%
 % - catevtfilename: file name for timestamps of each subsession.
-%
-% - pufevtfilename: file name for timestamps at which anair puff was 
+% - pufevtfilename: file name for timestamps at which an air puff was 
 %   delivered.
-%
-% - rrwevtfilename: file name for timestamps at which an reward was 
+% - rrwevtfilename: file name for timestamps at which a reward was 
 %   delivered when the animal reached the right platform.
-%
-% - lrwevtfilename: file name for timestamps at which an reward was 
+% - lrwevtfilename: file name for timestamps at which a reward was 
 %   delivered when the animal reached the left platform.
-%
 % - ripevtfilename: file name for timestamps at which a ripple had been 
 %   detected.
-%
 % - posfilename: file name for tracked positions.
-%
 % - laptypefilename: file name for the type of trial (+1 if the animal
 %   went from the left to the right platform; -1 if it went from the right
 %   to the left one and 0 if made a u-turn and returned to the same
 %   platform.
-%
-% - accfilename: file name for the accelerometer data (3 axis data).
-%
+% - accfilename: file name for the accelerometer data (3-axis data).
 % - pix2cm: Size of the pixels of the video tracking in cm.
-%
 % - sampleRate: Final sampling rate at which Behavioral and spiking data
 %   will be resampled.
-%
 % - spkfilename: file name for the spike timestamps and clusters ID.
-%
 % - spkinfofilename: file name for information about each cluster (shank
 %   ID, Pyramidal / Interneuron, etc).
-%
 % - ShankList: List of shank numbers from which spikes will be loaded 
-%  (defaults to all shanks located in the hippocampus).
-%
-% - Shanks_hpc: shank numbers located in the hippocampus.
-%
-% - Shanks_blaL: shank numbers located in the left amygdala.
-%
-% - Shanks_blaR: shank numbers located in the right amygdala.
-%
+%   (defaults to all shanks located in the hippocampus).
+% - ShankList_hpc: shank numbers located in the hippocampus.
+% - ShankList_blaL: shank numbers located in the left amygdala.
+% - ShankList_blaR: shank numbers located in the right amygdala.
 % - lfpfilename: filename for raw Lfp data.
-%
 % - LfpChannel_Hpc: Lfp channel to load from hippocampal recording.
-%
-% - LfpChannel_Bla: Lfp channel  to load from amygdala recording.
-%
-% - sampleRate_rawLfp: smapling rate at which raw Lfp data will be 
+% - LfpChannel_Bla: Lfp channel to load from amygdala recording.
+% - sampleRate_raw: sampling rate at which raw Lfp data will be 
 %   resampled.
-%
 % - ThetaBand: frequency range of the theta band [minFq maxFq]. Default is
 %   from 6 to 9 Hz.
-%
 % - statefilename: file name for start and end timestamps of the state of
 %   the animal (awake, drowsy, REM-sleep, SW-sleep).
 %
-% Usage:   
-% loadparams = DefineLoadParams(datadirpath)
+% USAGE:   
+% datadirpath = <path to the directory containing your data>
+% loadparams = SetLoadParams(datadirpath);
 %
-% written by J.Fournier 08/2023 for the iBio Summer school
+% See also: LoaddataNav, LoaddataSpk, LoaddataLfp
+%
+% Written by J.Fournier in 08/2023 for the Summer school "Advanced
+% computational analysis for behavioral and neurophysiological recordings"
 
 %animal name and session ID
 loadparams.animalname = 'Rat08';
@@ -118,7 +98,7 @@ loadparams.statefilename = 'States.mat';
 loadparams.sampleRate = 50;
 
 %Final smapling rate at which raw Lfp data will be resampled.
-loadparams.sampleRate_rawLfp = 600;
+loadparams.sampleRate_raw = 600;
 
 %Size of the pixels of the video tracking in cm
 loadparams.pix2cm = 0.43;

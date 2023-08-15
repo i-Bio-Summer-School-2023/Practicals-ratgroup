@@ -1,18 +1,22 @@
-function crossparams = SetCrossSpkParams(Nav,Spk)
-% SetCrossSpkParams - Define parameters for computing noise correlations using a shuffling procedure across position and speed bins.
+function crossparams = SetCrossSpkParams(Nav,Srep)
+% crossparams = SetCrossSpkParams(Nav,Srep) - Define parameters for 
+% computing noise correlations using a shuffling procedure across some 
+% explanatory variables to extract noise / trial-by-trial correlations from
+% the correlations expected from shared selectivity to the explanatory 
+% variables.
 %
-% Usage:
-%   crossparams = SetCrossSpkParams(Nav, Spk)
+% INPUTS:
+%   - Nav: A structure containing at least a field called 'sampleTimes' with
+%   the sample times of the data and some additional fields with the
+%   explanatory variables
+%   - Srep: array of responses (ntimes x ncells) from which patterns will be
+%        identified.
 %
-% Inputs:
-%   Nav: Structure containing navigation data (timestamps, positions, speeds, etc.).
-%   Spk: Structure containing spike train data for each neuron (timestamps, spike counts, etc.).
-%
-% Outputs:
+% OUTPUTS:
 %   crossparams: Structure containing cross-spike correlation analysis parameters.
 %
-% Cross-Spike Correlation Analysis Parameters (within the output structure crossparams):
-%   subset: a structure where field names correspond to the name of the
+%   crossparams has the following fields:
+%   - subset: a structure where field names correspond to the name of the
 %           fields in Nav that we want to apply the condition on. Fields of subset
 %           define the value of these fields of Nav that will be used to subset the
 %           data. For instance, if we want to subset data corresponding to
@@ -22,10 +26,9 @@ function crossparams = SetCrossSpkParams(Nav,Spk)
 %           crossparams.subset.Condition_op = 'ismember';
 %           crossparams.subset.Spd = 5;
 %           crossparams.subset.Spd_op = '>=';
-%   cellidx: Subset of cells for which correlations will be computed.
-%   sampleRate: Sampling rate of the data.
-%   scalingFactor: Scaling factor on the response data.
-%   lag: Range of lags over which cross-correlations will be computed (in seconds).
+%   - cellidx: Subset of cells for which correlations will be computed.
+%   - sampleRate: Sampling rate of the data.
+%   - lag: Range of lags over which cross-correlations will be computed (in seconds).
 %   - nShuffle: number of shuffle control to perform to establish a
 %   distribution of correlation values expected from shared selectivity to
 %   the variables indicated in crossparams.variablenames.
@@ -36,11 +39,23 @@ function crossparams = SetCrossSpkParams(Nav,Spk)
 %   second.
 %   - binedges: cell array of bin edges to discretize the variables indicated
 %   in crossparams.variablenames.
-%   nspk_th: Minimal number of spikes to consider a cell.
-%   nShuffle: Number of shuffle controls for randomization.
-%   timewin: Spike count window in seconds.
+%   - nspk_th: Minimal number of spikes to consider a cell.
+%   - nShuffle: Number of shuffle controls for randomization.
+%   - timewin: Spike count window in seconds.
 %
-% Written by J. Fournier in 08/2023 for the iBio Summer school.
+% USAGE:
+%    Nav = LoaddataNav(loadparams);
+%    Spk = LoaddataSpk(loadparams, Nav.sampleTimes);
+%    Srep = Spk.spikeTrain;
+%    crossparams = SetCrossSpkParams(Nav, Srep);
+%
+% SEE ALSO:
+%   CrossSpkAnalysis
+%
+% Written by J Fournier in 08/2023 for the Summer school
+% "Advanced computational analysis for behavioral and neurophysiological 
+% recordings"
+%%
 
 %Conditions over the fields of Nav for which pair-wise correlations will be 
 %computed. crossparams.subset should be a structure where fields have names
@@ -67,14 +82,10 @@ crossparams.subset.Xpos =  100;
 crossparams.subset.Xpos_op = '<=';
 
 %Subset of cells for which correlations will be computed
-crossparams.cellidx = true(1, size(Spk.spikeTrain, 2));
+crossparams.cellidx = true(1, size(Srep, 2));
 
 %Sampling rate of the data
-crossparams.sampleRate = 1 / nanmean(diff(Nav.sampleTimes));
-
-%Scaling factor on the response data (default is 1 / samplingRate so that
-%spiking data are returned in spike / s)
-crossparams.scalingFactor = 1 / crossparams.sampleRate;
+crossparams.sampleRate = 1 / mean(diff(Nav.sampleTimes), 'omitnan');
 
 %minimal and maximal lag to compute cross-correlation (in seconds).
 crossparams.lag = 0.1;

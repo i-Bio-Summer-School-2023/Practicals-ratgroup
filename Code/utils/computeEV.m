@@ -14,13 +14,19 @@ function EV = computeEV(y, ypred)
 % USAGE:
 % EV = computeEV(y, ypred);
 %
-%
-% Written by J.Fournier 08/2023 for the iBio Summer school
-
-
+% Written by J. Fournier in 08/2023 for the Summer school
+% "Advanced computational analysis for behavioral and neurophysiological 
+% recordings"
+%%
+% Calculate Residual Sum of Squares (RSS)
 RSS = sum((y - ypred).^2, 'omitnan');
+
+% Calculate Mean of the original data (y)
 m = mean(y, 'omitnan');
+
+% Calculate Total Sum of Squares (TSS)
 TSS = sum((y - m).^2, 'omitnan');
 
+% Calculate Explained Variance (EV)
 EV = 1 - (RSS/TSS);
 end

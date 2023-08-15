@@ -3,7 +3,8 @@ function DirectionalityIndex = getDirectionality(t1, t2)
 %
 % DirectionalityIndex = getDirectionality(t1, t2) computes the directionality
 % index between two tuning curves t1 and t2. The directionality index measures
-% the discrepancy between the tuning curves.
+% the discrepancy between the tuning curves as the absolute difference
+% divided by the sum
 %
 % INPUTS:
 % - t1: First tuning curve.
@@ -15,8 +16,10 @@ function DirectionalityIndex = getDirectionality(t1, t2)
 % USAGE:
 % DirectionalityIndex = getDirectionality(t1, t2);
 %
-% Written by J.Fournier in 08/2023 for the iBio Summer school
-
+% Written by J. Fournier in 08/2023 for the Summer school
+% "Advanced computational analysis for behavioral and neurophysiological 
+% recordings"
+%%
 
 DirectionalityIndex = abs(sum(t1(:) - t2(:)) ./ sum(t1(:) + t2(:)));
 

@@ -7,12 +7,13 @@ function GLMs = GLMAnalysis(Nav, Srep, glmsparams)
 % model significance.
 %
 % Inputs:
-%   Nav: Navigation data structure containing information about conditions,
-%        positions and running speeds.
-%   Srep: Responses, array where rows correspond to time bins and
+% - Nav: A structure containing at least a field called 'sampleTimes' with
+%   the sample times of the data and some additional fields with the
+%   explanatory variables
+% - Srep: Responses, array where rows correspond to time bins and
 %         columns correspond to cells. Each element represents the activity
 %         of a cell in a time bin.
-%   glmsparams: Structure containing GLM analysis parameters
+% - glmsparams: Structure containing GLM analysis parameters
 %
 % Outputs:
 %   GLMs: Output structure containing the results and analysis of the GLM.
@@ -22,7 +23,7 @@ function GLMs = GLMAnalysis(Nav, Srep, glmsparams)
 %       - LLH: Log likelihood values for different models (position, speed,
 %         position x speed) for each cell.
 %       - LLH_cst: Log likelihood values for constant mean model for each cell.
-%       -tuning: a array of structures with as many elements as the number
+%       - tuning: a array of structures with as many elements as the number
 %       of input variable (max 2 in this code). tuning has the following
 %       fields:
 %               * bincenters: Bin centers for the corresponding variable.
@@ -34,12 +35,17 @@ function GLMs = GLMAnalysis(Nav, Srep, glmsparams)
 %       
 %
 % Example usage:
-%   glmsparams = SetGLMsParams(Nav, Spk);
+%   Nav = LoaddataNav(loadparams);
+%   Spk = LoaddataSpk(loadparams, Nav.sampleTimes);
+%   Srep = Spk.spikeTrain;
+%   glmsparams = SetGLMsParams(Nav, Srep);
+%   %change glmsparams here is necessary
 %   GLMs = GLMAnalysis(Nav, Srep, glmsparams);
 %
 % See also: glmnet, crossvalPartition, GaussianSmooth, computeLLH_poisson
 %
-% written by J.Fournier 08/2023 for the iBio Summer school
+% Written by J. Fournier in 08/2023 for the Summer school
+% "Advanced computational analysis for behavioral and neurophysiological recordings"
 
 
 %%

@@ -1,49 +1,50 @@
-function pattparams = SetPattParams(Nav,Spk)
+function pattparams = SetPattParams(Nav,Srep)
 % SetPattParams - Define parameters for detecting cell assembly patterns.
 %
-% Usage:
-%   pattparams = SetPattParams(Nav, Spk)
+%   pattparams = SetPattParams(Nav, Srep) defines a set of parameters for
+%   detecting cell assembly patterns from spike response data.
 %
-% Inputs:
-%   Nav: Structure containing navigation data (e.g. timestamps, positions, speeds, etc.).
-%   Spk: Structure containing spike train data for each neuron (spike counts, etc.).
+% INPUTS:
+% - Nav: A structure containing at least a field called 'sampleTimes' with
+%   the sample times of the data and some additional fields with the
+%   explanatory variables
+% - Srep: Array of responses (ntimes x ncells) from which patterns will be
+%   identified.
 %
-% Outputs:
-%   pattparams: Structure containing pattern analysis parameters with the folllowing fields:
-%    - subset: a structure where field names correspond to the name of the
-%       fields in Nav that we want to apply the condition on. Fields of subset
-%       define the value of these fields of Nav that will be used to subset the
-%       data. For instance, if we want to subset data corresponding to
-%       Nav.Condition = 1 or 3 and Nav.Spd >= 5, pattparams.subset should be
-%       defined as:
-%       pattparams.subset.Condition = [1 3];
-%       pattparams.subset.Condition_op = 'ismember';
-%       pattparams.subset.Spd = 5;
-%       pattparams.subset.Spd_op = '>=';
-%   - cellidx: Subset of cells used for pattern detection.
+% OUTPUT:
+% - pattparams: A structure containing pattern analysis parameters with the
+%   following fields:
+%   - subset: A structure defining conditions over the fields of Nav for
+%     which patterns will be detected. Fields of subset correspond to the
+%     names of the fields in Nav, and the subset specifies values and
+%     operations to apply. For example:
+%     pattparams.subset.Condition = [1 3];
+%     pattparams.subset.Condition_op = 'ismember';
+%     pattparams.subset.Spd = 5;
+%     pattparams.subset.Spd_op = '>=';
+%   - cellidx: A logical array indicating a subset of cells for pattern detection.
 %   - nspk_th: Minimal number of spikes over the train set to consider a cell.
-%   - Marcenko: if true, the PCs will be selected based on the
-%   Marcenko-Pastur law. Otherwise, they will be selected based on shuffle
-%   controls (see below).
-%   - nShuffle: number of shuffle control to perform to establish a
-%   distribution of eigenvalues enabling us to select only the non-expected
-%   eigenvalues.
-%   - variablenames: cell array of names of variables in Nav used to build
-%   the shuffle controls: shuffling across time will be performed within 
-%   bins of these variables. If variablenames is empty, shuffling will be
-%   performed by circularly shifting responses by a random amount > 1
-%   second.
-%   - binedges: cell array of bin edges to use for the variables indicated
-%   in pattparams.variablenames.
-%   - NoiseCov: If true, the signal covariance, defined as the covariance
-%   matrix averaged across all shuffles, will be subtracted before
-%   proceeding to the PCA and ICA.
+%   - Marcenko: If true, select principal components (PCs) based on the Marcenko-Pastur law.
+%   - nShuffle: Number of shuffle controls to perform for eigenvalue distribution
+%     if pattparams.Marcenko is false.
+%   - variablenames: Cell array of variable names in Nav used for shuffling.
+%   - binedges: Cell array of bin edges for discretizing variables.
+%   - NoiseCov: If true, remove average covariance from covariance matrix.
+%   - pvalshf_th: P-value threshold for selecting PCs using shuffling.
 %   - strength_th: Pattern activation threshold to convert strength into "spikes".
-%   - sampleRate: Sampling rate of the data.
+%   - sampleRate: Sampling rate of the data (in Hz).
 %   - timewin: Size of the spike count window in seconds.
 %
-% Written by J. Fournier in 08/2023 for the iBio Summer school.
-
+% USAGE:
+%    Nav = LoaddataNav(loadparams);
+%    Spk = LoaddataSpk(loadparams, Nav.sampleTimes);
+%    Srep = Spk.spikeTrain;
+%    pattparams = SetPattParams(Nav, Srep);
+%
+% Written by J Fournier in 08/2023 for the Summer school
+% "Advanced computational analysis for behavioral and neurophysiological 
+% recordings"
+%%
 %Conditions over the fields of Nav for which patterns will be detected
 %pattparams.subset should be a structure where fields have names of the 
 %fields of Nav to which the condition should apply to.
@@ -68,17 +69,15 @@ pattparams.subset.Xpos_op = '>=';
 pattparams.subset.Xpos =  100;
 pattparams.subset.Xpos_op = '<=';
 
-%Subset of cells used for pattern detection. By default we'll use only 
-%pyramidal cells since interneurons with high firing rates can bias the
-%covariance matrix.
-pattparams.cellidx = Spk.PyrCell;
+%Subset of cells used for pattern detection.
+pattparams.cellidx = true(1, size(Srep, 2));
 
 %Minimal number of spikes over the train set to consider a cell for 
 %pattern detection
 pattparams.nspk_th = 0;
 
 %If true, the PC will be selected according to the Marcenko-Pastur law
-pattparams.Marcenko = false;
+pattparams.Marcenko = true;
 
 %Number of shuffle controls to perform for randomization if Marcenko-Pastur
 %law is not used to select PCs
@@ -100,7 +99,7 @@ pattparams.binedges{3} = [-2 0 2];
 %If true, the covariance average across all shuffle controls, which provide
 %an estimate of the signal covariance, will be removed from the overall
 %covariance before proceeding to the PCA and ICA.
-pattparams.NoiseCov = true;
+pattparams.NoiseCov = false;
 
 %P-value to use as a threshold when selecting the PCs using the shuffling
 %approach
@@ -111,7 +110,7 @@ pattparams.pvalshf_th = 0.05;
 pattparams.strength_th = 5;
 
 %Sampling rate of the data
-pattparams.sampleRate = 1 / nanmean(diff(Nav.sampleTimes));
+pattparams.sampleRate = 1 / mean(diff(Nav.sampleTimes), 'omitnan');
 
 %Size of the spike count window in seconds
 pattparams.timewin = .02;

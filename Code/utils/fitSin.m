@@ -1,11 +1,29 @@
 function [amp, maxphs] = fitSin(t)
-%Computes the amplitude and phase of the sinusoid that best fits tuning
-%curve t.
+% fitSin Fits a sinusoid to a tuning curve and computes amplitude and phase.
+%
+% [amp, maxphs] = fitSin(t) fits a sinusoid to a tuning curve t and computes
+% the amplitude (amp) and phase of the sinusoid.
+%
+% INPUT:
+% - t: 1D vector, typically a tuning curve.
+%
+% OUTPUTS:
+% - amp: Amplitude of the best-fitting sinusoid.
+% - maxphs: Phase of the peak of the best-fitting sinusoid in degrees.
+%
+% USAGE:
+% [amp, maxphs] = fitSin(t);
+%
+%
+% Written by J. Fournier in 08/2023 for the Summer school
+% "Advanced computational analysis for behavioral and neurophysiological 
+% recordings"
 
-t = t(:)';
+t = t(:)';  % Ensure t is a row vector
 nphsbins = numel(t);
 Phi = (0.5:(nphsbins-0.5))/nphsbins*2*pi;
 
+% Numerator and denominator for phase calculation
 Phi_num = sum((t-mean(t)).*sin(Phi));
 Phi_den = sum((t-mean(t)).*cos(Phi));
 
