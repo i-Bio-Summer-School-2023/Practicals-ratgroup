@@ -1,4 +1,4 @@
-# Cell Assembly Pattern Analysis Toolbox
+# Cell Assembly Detection
 
 This folder contains MATLAB functions for detecting cell assembly patterns from neural spike response data using independent component analysis (ICA). 
 It includes two main functions: `SetPattParams` defines options for the detection of cell assemblies such as over which subset of the data to do the detection or the variables 
