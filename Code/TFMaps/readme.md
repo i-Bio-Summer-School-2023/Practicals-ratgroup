@@ -3,7 +3,7 @@
 This folder contains MATLAB funcitons to perform time-frequency analysis of continuous data and compute power and coherence maps along a set of explanaotry variables. 
 It includes two main functions: `SetTFMapsParams` for defining options such as
 which channels to use, which explanatory variables to use, how to bin them and over which subset of the data these maps should be computed. `SetTFMapsParams` then takes these options as an input,
-together with a structure containing your explanatory variables (called `Nav` here) and an array of responses for which you want to compute tuning curves in the spectral domain (e.g Lfp.Lfp_raw).
+together with a structure containing your explanatory variables (called `Nav` here) and an array of responses for which you want to compute tuning curves in the spectral domain (e.g `Lfp.Lfp_raw`).
 See the Load function section for how the `Nav` and `Lfp` structures should be constructed.
 
 ## SetTFMapsParams
