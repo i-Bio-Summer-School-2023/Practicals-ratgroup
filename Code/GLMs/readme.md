@@ -47,7 +47,7 @@ Results returned in `tuning` corresponds to the best model as estimated by a lik
 
 ## Usage
 
-1. Load behavioral data and spike data:
+1. **Load behavioral data and spike data:**
 datapath = 'path/to/your/data'
 
     `loadparams = SetLoadParams(datapath);`
@@ -58,10 +58,10 @@ datapath = 'path/to/your/data'
 
     `Srep = Spk.spikeTrain;`
 
-2. Define parameters using SetGLMsParams: 
+2. **Define parameters using SetGLMsParams:**
     `glmsparams = SetGLMsParams(Nav, Srep);`
 
-3. Modify paramters in `glmsparams` if needed. For instance:
+3. **Modify paramters in `glmsparams` if needed. For instance:**
     `glmsparams.subset.Condition = [1 3 5];`
    
     `glmsparams.subset.Condition_op = 'ismember';`
@@ -74,7 +74,7 @@ datapath = 'path/to/your/data'
    
     `glmsparams.binedges = {0:2:100, [0:5:50 inf];`
 
-5. Estimate GLMs using GLMsAnalysis
+5. **Estimate GLMs using GLMsAnalysis**
     `GLMs = GLMsAnalysis(Nav, Srep, glmsparams);`
 
 For more detailed information and usage examples of each function, please refer to the function documentation, `Tutorial2.2` and `Tutorial_handson`.
