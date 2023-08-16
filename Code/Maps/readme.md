@@ -64,7 +64,7 @@ datapath = 'pat/to/your/data'
    
     `mapsparams.Xbinedges = 0:2:100;`
 
-    `mapsparams.Xvariablename = [];`
+    `mapsparams.Yvariablename = [];`
 
 5. Perform place field analysis using MapsAnalysis
     `Maps = MapsAnalysis(Nav, Srep, mapsparams);`
