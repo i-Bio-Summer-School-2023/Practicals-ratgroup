@@ -42,7 +42,7 @@ Results included in the `Dec` structure:
 
 1. **Load behavioral data and spike data:**
 
-    datapath = 'path/to/your/data'
+    `datapath = 'path/to/your/data'`
 
     `loadparams = SetLoadParams(datapath);`
 
