@@ -40,7 +40,7 @@ Results included in the `Dec` structure:
 
 ## Usage
 
-1. Load behavioral data and spike data:
+1. **Load behavioral data and spike data:**
 datapath = 'path/to/your/data'
 
     `loadparams = SetLoadParams(datapath);`
@@ -51,10 +51,10 @@ datapath = 'path/to/your/data'
 
     `Srep = Spk.spikeTrain;`
 
-2. Define parameters using SetDecParams: 
+2. **Define parameters using SetDecParams:**
     `decparams = SetDecParams(Nav, Srep);`
 
-3. Modify paramters in `decparams` if needed. For instance:
+3. **Modify paramters in `decparams` if needed. For instance:**
     `decparams.subset.Condition = [1 3 5];`
    
     `decparams.subset.Condition_op = 'ismember';`
@@ -69,7 +69,7 @@ datapath = 'path/to/your/data'
 
     `decparams.Yvariablename = [];`
 
-5. Perform decoding using DecodingAnalysis
+5. **Perform decoding using DecodingAnalysis**
     `Dec = DecodingAnalysis(Nav, Srep, decparams);`
 
 For more detailed information and usage examples of each function, please refer to the function documentation, `Tutorial3.1` and `Tutorial_handson`.
