@@ -46,7 +46,8 @@ Fields included in the `Patt` structure:
 ## Usage Example
 
 1. **Load behavioral data and spike train responses**
-    `datapath = 'path/to/your/data';`
+
+   `datapath = 'path/to/your/data';`
 
     `loadparams = SetLoadParams(datapath);`
 
@@ -56,7 +57,7 @@ Fields included in the `Patt` structure:
 
     `Srep = Spk.spikeTrain;`
 
-2. **Define pattern detection parameters using SetPattParams**
+3. **Define pattern detection parameters using SetPattParams**
 
     `pattparams = SetPattParams(Nav, Srep);`
 
@@ -70,8 +71,9 @@ Fields included in the `Patt` structure:
 
     `pattparams.subset.Spd_op = '>=';`
 
-3. **Perform pattern analysis using PatternAnalysis**
-    `Patt = PatternAnalysis(Nav, Srep, pattparams);`
+4. **Perform pattern analysis using PatternAnalysis**
+
+   `Patt = PatternAnalysis(Nav, Srep, pattparams);`
 
 For more detailed information and usage examples of each function, please refer to the function documentation, `Tutorial3.2` and `Tutorial_handson`.
 
