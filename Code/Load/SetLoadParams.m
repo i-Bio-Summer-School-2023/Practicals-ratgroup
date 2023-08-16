@@ -85,12 +85,11 @@ loadparams.ripevtfilename = [loadparams.animalname '-' num2str(loadparams.sessio
 
 %Names of the .mat files to load
 loadparams.posfilename = 'Positions.mat';
-loadparams.laptypefilename = 'LapType2.mat';
-% loadparams.spkfilename = 'HippoSpikes.mat';
+loadparams.laptypefilename = 'LapType.mat';
 loadparams.spkfilename = 'AllSpikes.mat';
 loadparams.spkinfofilename = 'IndexType.mat';
-loadparams.lfpfilename = 'LFP2.mat';
-loadparams.accfilename = 'LFP2.mat';
+loadparams.lfpfilename = 'LFP.mat';
+loadparams.accfilename = 'LFP.mat';
 loadparams.statefilename = 'States.mat';
 
 %Final smapling rate at which Behavioral, spiking and theta data will be 
