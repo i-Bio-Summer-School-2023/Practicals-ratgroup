@@ -1,10 +1,10 @@
 function GLMs = GLMAnalysis(Nav, Srep, glmsparams)
 % GLMs = GLMAnalysis(Nav, Srep, glmsparams)
 % Estimates tuning curves for up to two variables using a Poisson GLM
-% model. Model comparison is performed by comparing the likelihood of fitted
-% data. This function computes GLMs for single-variable models and for the
-% full models, performs k-fold cross-validation, and evaluates
-% model significance.
+% model. Model comparison is performed by comparing the likelihood of
+% held-out data under the model. This function computes GLMs for 
+% single-variable models and for the full models, performs k-fold 
+% cross-validation, and evaluates model significance.
 %
 % Inputs:
 % - Nav: A structure containing at least a field called 'sampleTimes' with

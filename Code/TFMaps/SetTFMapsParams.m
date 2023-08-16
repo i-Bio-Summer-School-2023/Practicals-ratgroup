@@ -1,4 +1,4 @@
-function TFmapsparams = SetTFMapsParams(Nav, Lrep, sampleTimes_raw)
+function TFmapsparams = SetTFMapsParams(Nav, Lrep, sampleTimes_Lrep)
 % SetTFMapsParams - Define a set of parameters needed for time-frequency
 % analysis of continuous data.
 %
@@ -7,7 +7,7 @@ function TFmapsparams = SetTFMapsParams(Nav, Lrep, sampleTimes_raw)
 %   timestamps of the samples (in Nav.sampleTimes).
 %   - Lrep: response array where each column represents the signal from a 
 %   specific channel. Typically Lfp data.
-%   - sampleTimes_raw (optional): Sampling times for signals in Lrep. If not 
+%   - sampleTimes_Lrep (optional): Sampling times for signals in Lrep. If not 
 %   provided, assumes the same sampling as in Nav.sampleTimes.
 %
 % OUTPUTS:
@@ -59,7 +59,7 @@ function TFmapsparams = SetTFMapsParams(Nav, Lrep, sampleTimes_raw)
 %    Nav = LoaddataNav(loadparams);
 %    Lfp = LoaddataLfp(loadparams, Nav.sampleTimes);
 %    Lrep = Lfp.Lfp_raw;
-%    TFmapsparams = SetTFMapsParams(Nav, Lrep, Lfp.sampleTimes_raw)
+%    TFmapsparams = SetTFMapsParams(Nav, Lrep, Lfp.sampleTimes)
 %
 % Written by J Fournier in 08/2023 for the Summer school
 % "Advanced computational analysis for behavioral and neurophysiological recordings"
@@ -102,14 +102,14 @@ TFmapsparams.chidx = 1:size(Lrep,2);
 %power will be correlated to.
 TFmapsparams.sampleRate = 1 / mean(diff(Nav.sampleTimes), 'omitnan');
 
-%if sampleTimes_raw is not provided, we assume the signals in Lrep are
+%if sampleTimes_Lrep is not provided, we assume the signals in Lrep are
 %sampled just as signals in Nav.
 if nargin < 3
-    sampleTimes_raw = Nav.sampleTimes; 
+    sampleTimes_Lrep = Nav.sampleTimes; 
 end
 
 %Sampling rate of the signal to analyse in the frequency domain
-TFmapsparams.sampleRate_raw = 1 / mean(diff(sampleTimes_raw), 'omitnan');
+TFmapsparams.sampleRate_raw = 1 / mean(diff(sampleTimes_Lrep), 'omitnan');
 
 %If true, we'll compute the wavelet transforms
 TFmapsparams.Spectrogram = true;

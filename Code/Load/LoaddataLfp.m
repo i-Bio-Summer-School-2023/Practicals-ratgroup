@@ -57,7 +57,7 @@ sampleTimes_new = (lfpsampleTimes(idxStart):(1/loadparams.sampleRate_raw):lfpsam
 Lfp.Lfp_raw = NaN(numel(sampleTimes_new), 2);
 Lfp.Lfp_raw(:,1) = interp1(sampleTimes_orig, lfp.hippoLFPs(:,1 + loadparams.LfpChannel_Hpc), sampleTimes_new, 'linear');
 Lfp.Lfp_raw(:,2) = interp1(sampleTimes_orig, lfp.blaLFPs(:,1 + loadparams.LfpChannel_Bla), sampleTimes_new, 'linear');
-Lfp.sampleTimes_raw = sampleTimes_new;
+Lfp.sampleTimes = sampleTimes_new;
 
 %Filtering in the theta band
 Lfp.Theta = filterellip(lfp.hippoLFPs(:,1 + loadparams.LfpChannel_Hpc), loadparams.ThetaBand(1), loadparams.ThetaBand(2), lfpsampRate);

@@ -28,10 +28,14 @@ function glmsparams = SetGLMsParams(Nav,Srep)
 %   - cellidx: Logical array indicating the subset of cells for which GLMs will be computed.
 %   - sampleRate: Sampling rate of the data.
 %   - scalingFactor: Scaling factor on the response data.
-%   - XsmthNbins: Size of the Gaussian window for smoothing along X (in bins).
-%   - Xbinedges: Edges of position bins used to discretize positions.
-%   - YsmthNbins: Size of the Gaussian window for smoothing speed tuning curves (in bins).
-%   - Ybinedges: Edges of speed bins used to discretize speed.
+%   - variablenames: a cell array (1 x nvariables) indicating the names
+%     of the variable to use as predictors. No more than 2 variables are
+%     allowed in this version of the code.
+%   - smthNbins: a cell array (1 x nvariables) with the size of the 
+%     Gaussian window for smoothing along each of the variables indicated
+%     in variablenames.
+%   - binedges: a cell array (1 x nvariables) with theedges of the bins 
+%     used to discretize each of the variables indicated in variablenames.
 %   - occ_th: Occupancy threshold above which predictors are included in the GLM estimate.
 %   - nspk_th: Minimal number of spikes to consider a cell for GLM estimation.
 %   - kfold: Number of folds for cross-validation.

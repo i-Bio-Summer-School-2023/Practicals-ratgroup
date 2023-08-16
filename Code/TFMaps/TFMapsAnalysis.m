@@ -36,10 +36,10 @@ function TFMaps = TFMapsAnalysis(Nav, Lrep, TFmapsparams, sampleTimes_Lrep)
 %    Nav = LoaddataNav(loadparams);
 %    Lfp = LoaddataLfp(loadparams, Nav.sampleTimes);
 %    Lrep = Lfp.Lfp_raw;
-%    TFmapsparams = SetTFMapsParams(Nav, Lrep, Lfp.sampleTimes_raw);
+%    TFmapsparams = SetTFMapsParams(Nav, Lrep, Lfp.sampleTimes);
 %    %change parameters in TFmapsparams here if needed. For instance:
 %    %TFmapsparams.freqrange = [5 100];
-%    TFMaps = TFMapsAnalysis(Nav, Lrep, TFmapsparams, Lfp.sampleTimes_raw);
+%    TFMaps = TFMapsAnalysis(Nav, Lrep, TFmapsparams, Lfp.sampleTimes);
 %
 % Written by J Fournier in 08/2023 for the Summer school
 % "Advanced computational analysis for behavioral and neurophysiological recordings"
