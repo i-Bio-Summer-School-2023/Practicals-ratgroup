@@ -1,6 +1,6 @@
 # Load functions
 
-This repository contains MATLAB functions for loading and preprocessing neural and behavioral data using the functions `SetLoadParams`, `LoaddataNav`, `LoaddataSpk`, and `LoaddataLfp`. 
+This folder contains MATLAB functions for loading and preprocessing neural and behavioral data using the functions `SetLoadParams`, `LoaddataNav`, `LoaddataSpk`, and `LoaddataLfp`. 
 These functions should be customized to your specific datasets. They should however keep the main logic which is that:
 * `LoaddataNav` should return a MATLAB structure (called Nav here) that contains all the explanatory
 variables along which you want to investigate the selectivity of neural responses (for instance the position of the animal or a specific stimulus);
