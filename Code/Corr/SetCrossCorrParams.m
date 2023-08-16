@@ -1,5 +1,5 @@
-function crossparams = SetCrossSpkParams(Nav,Srep)
-% crossparams = SetCrossSpkParams(Nav,Srep) - Define parameters for 
+function crossparams = SetCrossCorrParams(Nav,Srep)
+% crossparams = SetCrossCorrParams(Nav,Srep) - Define parameters for 
 % computing noise correlations using a shuffling procedure across some 
 % explanatory variables to extract noise / trial-by-trial correlations from
 % the correlations expected from shared selectivity to the explanatory 
@@ -47,7 +47,7 @@ function crossparams = SetCrossSpkParams(Nav,Srep)
 %    Nav = LoaddataNav(loadparams);
 %    Spk = LoaddataSpk(loadparams, Nav.sampleTimes);
 %    Srep = Spk.spikeTrain;
-%    crossparams = SetCrossSpkParams(Nav, Srep);
+%    crossparams = SetCrossCorrParams(Nav, Srep);
 %
 % SEE ALSO:
 %   CrossSpkAnalysis

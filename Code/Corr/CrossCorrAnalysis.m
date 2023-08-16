@@ -1,16 +1,17 @@
-function Cross = CrossSpkAnalysis(Nav, Srep, crossparams)
-% CrossSpkAnalysis - Estimates cross-correlations between responses provided in columns of Srep. 
+function Cross = CrossCorrAnalysis(Nav, Srep, crossparams)
+% CrossCorrAnalysis - Estimates cross-correlations between responses 
+% provided in columns of Srep. 
 % Signal correlations are estimated by shuffling time points within bins of
 % the variables defined in crossparams.variablenames. Trial-by-trial (or
-% noise) correlations are then computed as the overall correlation - the
-% signal correlation (averaged across all shuffles).
+% noise) correlations are then computed as the overall correlation minus
+% the signal correlation (averaged across all shuffles).
 %
 % INPUTS:
 %   - Nav: A structure containing at least a field called 'sampleTimes' with
 %   the sample times of the data and some additional fields with the
 %   explanatory variables
-%   - Srep: Spike response matrix where each column represents the spike 
-%   counts of a neuron.
+%   - Srep: ntimes x ncells matrix where each column represents the 
+%   response of a neuron.
 %   - crossparams: Structure containing cross-spike correlation analysis 
 %   parameters (output from DefineCrossSpkParams).
 %
@@ -27,7 +28,9 @@ function Cross = CrossSpkAnalysis(Nav, Srep, crossparams)
 %     correlations are estimated by shuffling time points wihtin bins of
 %     the explanatory variables
 %   - ccSigSD: Standard deviation of signal cross-correlation estimated by
-%   shuffling within bins of the explanatory variables
+%     shuffling within bins of the explanatory variables
+%   - ccNoiseSD: Standard deviation of trial-by-trial correlations 
+%     estimated (came as ccSigSD). 
 %   - pval: P-value matrix for the maximum cross-correlation peak.
 %   - bestcc: Maximum cross-correlation value.
 %   - bestlag: Lag corresponding to the maximum cross-correlation value.
@@ -36,10 +39,10 @@ function Cross = CrossSpkAnalysis(Nav, Srep, crossparams)
 %    Nav = LoaddataNav(loadparams);
 %    Spk = LoaddataSpk(loadparams, Nav.sampleTimes);
 %    Srep = Spk.spikeTrain;
-%    crossparams = SetCrossSpkParams(Nav, Srep);
+%    crossparams = SetCrossCorrParams(Nav, Srep);
 %    %change parameters in crossparams here if needed. For instance:
 %    %crossparams.lag = 0.5;
-%    Cross = CrossSpkAnalysis(Nav, Srep, crossparams)
+%    Cross = CrossCorrAnalysis(Nav, Srep, crossparams)
 %
 % Written by J Fournier in 08/2023 for the Summer school
 % "Advanced computational analysis for behavioral and neurophysiological 
@@ -89,50 +92,46 @@ end
 %List of time indices to do the triggered average
 idxwin = -round(crossparams.lag * sampleRate):round(crossparams.lag * sampleRate);
 lagbins = idxwin / sampleRate;
+nlagbins = numel(lagbins);
 
 %Initializing the cross-correlation matrix between cell pairs
-ccAll = NaN(ncells, ncells, numel(idxwin));
+ccAll = NaN(ncells, ncells, nlagbins);
 
 %Computing the cross-correlation between cell pairs.
-%Since spike trains are discrete it is actually much more efficient to
-%compute the cross-correlation from the spike-triggered average than using
-%xcorr.
+%Instead of using xcorr for each cell pair, we calculate the covariance 
+%matrix for each time lag with a matrix product. This should thus 
+%compute in linear time with the number of cells.
+%Padding spike counts and indices
+spkCountpad = cat(1,zeros(ceil(numel(idxwin)/2),ncells),spkCount,zeros(ceil(numel(idxwin)/2),ncells));
+tidxpad = cat(1,false(ceil(numel(idxwin)/2),1),tidx,false(ceil(numel(idxwin)/2),1));
+
+%Removing the contribution of spikes to the correlation when they are 
+%not in the subset of interest.
+spkCountpad(~tidxpad,:) = 0;
+startlag = idxwin(1);
 parfor icell1 = 1:ncells
-    ccAlltemp = NaN(ncells, numel(idxwin));
-    for icell2 = icell1+1:ncells
-        %Spike indices that are in the right range of time indices
-        st1 = find(tidx & spkCount(:,icell1) > 0);
+    %Shifting cell1 by the smallest shift in idxwin -1 so that we only have
+    %to shift it by one for every new lag to calculate.
+    spkCountcell = circshift(spkCountpad(:,icell1),startlag - 1,1);
 
-        %Removing values from the spike counts that are not in the
-        %right range of time indices
-        sp1 = spkCount(:,icell1);
-        sp2 = spkCount(:,icell2);
-        sp1(~tidx) = NaN;
-        sp2(~tidx) = NaN;
+    ccAlltemp = NaN(ncells, nlagbins);
+    for ilag = 1:nlagbins
 
-        %Getting the snipets of cell2's spikes around cell1's spikes
-        [~, ~, l] = ComputeTriggeredAverage(sp2, st1, idxwin, spkCount(st1,icell1));
+        %Shifting cell1
+        spkCountcell = circshift(spkCountcell,1,1);
 
-        %Unnormalized cross-correlation
-        c12 = sum(l, 1, 'omitnan');
-
-        %Auto-correlations at zero lag
-        c1 = sum(sp1.^2, 'omitnan');
-        c2= sum(sp2.^2, 'omitnan');
-
-        %Normalized cross-correlation
-        ccAlltemp(icell2,:) = c12 / sqrt(c1 * c2);
+        %unmormalized correlation between shifted cell1 and all the other
+        %cells
+        ccAlltemp(:,ilag) = spkCountpad'*spkCountcell;
     end
+
     ccAll(icell1,:,:) = ccAlltemp;
 end
 
-%filling in the symetrical lower part of the correlation matrix
-for l = 1:size(ccAll,3)
-    cslice = ccAll(:,:,l);
-    csliceT = transpose(cslice);
-    cslice(tril(ones(size(cslice)))>0) = csliceT(tril(ones(size(cslice)))>0);
-    ccAll(:,:,l) = cslice;
-end
+%normalizing by the auto-correlation at zero lag
+c1 = sum(spkCountpad.^2, 1);
+ccAll = ccAll ./ sqrt(c1' * c1);
+
 %%
 %Computing pair-wise cross-correlations after shuffling spikes within
 %bins of variables indicated in 
@@ -159,18 +158,18 @@ else
 end
 
 %Initializing the cross-correlation matrix for the shuffle controls
-ccSigShf = NaN(ncells, ncells, numel(idxwin), crossparams.nShuffle);
+ccSigShf = NaN(ncells, ncells, nlagbins, crossparams.nShuffle);
 
 %Initializing the random number generator for reproducibility purposes
 s = RandStream('mt19937ar','Seed',0);
 
 %Computing cross-correlation after shuffling spikes within position and
-%speed bins.
+%speed bins over the subset of interest.
 for ishf = 1:crossparams.nShuffle
     %Shuffling spike trains
     spikeTrainShf = NaN(size(spikeTrain));
     for k = 1:nbins
-        idx = find(varlin_discrete == k);
+        idx = find(tidx & varlin_discrete == k);
         for icell = 1:ncells
             idxshf = idx(randperm(s,numel(idx)));
             spikeTrainShf(idx,icell) = spikeTrain(idxshf,icell);
@@ -184,50 +183,47 @@ for ishf = 1:crossparams.nShuffle
         spkCountShf(:,icell) = smooth(spikeTrainShf(:,icell), decbinwin, 'moving') * decbinwin;
     end
     
+    %Padding spike counts and indices
+    spkCountShfpad = cat(1, zeros(ceil(numel(idxwin)/2),ncells), spkCountShf, zeros(ceil(numel(idxwin)/2),ncells));
+
+    %Removing the contribution of spikes to the correlation when they are
+    %not in the subset of interest.
+    spkCountShfpad(~tidxpad,:) = 0;
+
+    %Initializing the correlation matrix for the parfor loop
+    ccSigShftemp = NaN(ncells, ncells, nlagbins);
+
+    startlag = idxwin(1);
     parfor icell1 = 1:ncells
-        ccSigShftemp = NaN(ncells, numel(idxwin));
-        for icell2 = icell1+1:ncells
-            %Spike indices that are in the right range of time indices
-            st1 = find(tidx & spkCountShf(:,icell1) > 0);
+        %Shifting cell1 by the smallest shift in idxwin -1 so that we only have
+        %to shift it by one for every new lag to calculate.
+        spkCountcell = circshift(spkCountShfpad(:,icell1), startlag - 1, 1);
 
-            %Removing values from the spike counts that are not in the
-            %right range of time indices
-            sp1 = spkCountShf(:,icell1);
-            sp2 = spkCountShf(:,icell2);
-            sp1(~tidx) = NaN;
-            sp2(~tidx) = NaN;
+        ccAlltemp = NaN(ncells, nlagbins);
+        for ilag = 1:nlagbins
 
-            %Getting the snipets of cell2's spikes around cell1's spikes
-            [~, ~, l] = ComputeTriggeredAverage(sp2, st1, idxwin, spkCountShf(st1,icell1));
+            %Shifting cell1
+            spkCountcell = circshift(spkCountcell,1,1);
 
-            %Unnormalized cross-correlation
-            c12 = sum(l, 1, 'omitnan');
-
-            %Auto-correlations at zero lag
-            c1 = sum(sp1.^2, 'omitnan');
-            c2= sum(sp2.^2, 'omitnan');
-
-            %Normalized cross-correlation
-            ccSigShftemp(icell2,:) = c12 / sqrt(c1 * c2);
+            %unmormalized correlation between shifted cell1 and all the other
+            %cells
+            ccAlltemp(:,ilag) = spkCountpad'*spkCountcell;
         end
-        ccSigShf(icell1,:,:,ishf) = ccSigShftemp;
+
+        ccSigShftemp(icell1,:,:) = ccAlltemp;
     end
 
-    %filling in the symetrical lower part of the correlation matrix
-    for l = 1:size(ccSigShf,3)
-        cslice = ccSigShf(:,:,l,ishf);
-        csliceT = transpose(cslice);
-        cslice(tril(ones(size(cslice)))>0) = csliceT(tril(ones(size(cslice)))>0);
-        ccSigShf(:,:,l,ishf) = cslice;
-    end
+    %normalizing by the auto-correlation at zero lag
+    ccSigShf(:,:,:,ishf) = ccSigShftemp ./ sqrt(c1' * c1);
 end
 
 %%
 %Estimating the noise correlation as the actual correlation minus the
 %average of the shuffle controls.
 ccSig = mean(ccSigShf, 4, 'omitnan');
+ccSigSD = std(ccSigShf, [], 4);
 ccNoise = ccAll - ccSig;
-ccSigSD = std(ccAll - ccSigShf, [], 4);
+ccNoiseSD = std(ccAll - ccSigShf, [], 4);
 
 %Estimating the p-value of the maximum of the cross-correlation.
 [m, I] = max(ccAll, [], 3);
@@ -249,6 +245,7 @@ ncells_orig = size(Srep, 2);
 nlagbins = size(ccAll, 3);
 Cross.ccAll = NaN(ncells_orig, ncells_orig, nlagbins);
 Cross.ccNoise = NaN(ncells_orig, ncells_orig, nlagbins);
+Cross.ccNoiseSD = NaN(ncells_orig, ncells_orig, nlagbins);
 Cross.ccSig = NaN(ncells_orig, ncells_orig, nlagbins);
 Cross.ccSigSD = NaN(ncells_orig, ncells_orig, nlagbins);
 Cross.pval = NaN(ncells_orig, ncells_orig);
@@ -259,6 +256,7 @@ for i = 1:ncells
     for j = 1:ncells
         Cross.ccAll(cellidx(i),cellidx(j),:) = ccAll(i,j,:);
         Cross.ccNoise(cellidx(i),cellidx(j),:) = ccNoise(i,j,:);
+        Cross.ccNoiseSD(cellidx(i),cellidx(j),:) = ccNoiseSD(i,j,:);
         Cross.ccSig(cellidx(i),cellidx(j),:) = ccSig(i,j,:);
         Cross.ccSigSD(cellidx(i),cellidx(j),:) = ccSigSD(i,j,:);
         Cross.pval(cellidx(i),cellidx(j)) = pval(i,j);
