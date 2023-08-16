@@ -15,13 +15,13 @@ It is associated to a set of [tutorials](#Tutorials) covering the aforementioned
 
 The `Load` folder contains functions for loading and preprocessing data from the [example dataset](#Data) using functions like `SetLoadParams`, `LoaddataNav`, `LoaddataSpk`, and `LoaddataLfp`. These functions should be customized to your specific datasets while keeping the main logic intact. They return structures containing different types of data: `LoaddataNav` should return a structure (called `Nav` here) containing data about experimental conditions and explanatory variables, such as the appearance of a stimulus or the position of the animal; `LoaddataSpk` should returns a structure (called `Spk` here) with spike counts sampled at the sampling rate of data stored in `Nav` together with spike times and information about the recorded cells; `LoaddataLfp` should return a structure (called `Lfp` here) that contains signals that needs to be sampled at a higher sampling rate than data in `Nav`, typically Lfp signals for which you would like to investigate the frequency content in the gamma range.
 
-For more information and usage examples, refer to the related [documentation](/Load/readme.md) and [Tutorial1](./Tutorials/readme.md).
+For more information and usage examples, refer to the related [documentation](/Code/Load/readme.md) and [Tutorial1](./Tutorials/readme.md).
 
 ## Mapping neural responses along one or two variables
 
 The `Maps` section includes functions for estimating tuning curves along up to two variables, using variables loaded into the structure `Nav` mentioned above and a set of responses, typically corresponding to spike trains stored in `Spk`. `SetMapsParams` defines options and `MapsAnalysis` computes tuning curves and their related statistics.
 
-For more information and usage examples, refer to the related [documentation](/Maps/readme.md) and [Tutorial2.1](#Tutorials).
+For more information and usage examples, refer to the related [documentation](/Code/Maps/readme.md) and [Tutorial2.1](#Tutorials).
 
 ## Generalized Linear Models (GLMs)
 
