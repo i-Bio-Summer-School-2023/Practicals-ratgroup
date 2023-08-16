@@ -37,8 +37,9 @@ Results included in `Maps`:
 
 ## Usage
 
-1. Load behavioral data and spike data:
-datapath = 'pat/to/your/data'
+1. **Load behavioral data and spike data:**
+
+    datapath = 'pat/to/your/data'
 
     `loadparams = SetLoadParams(datapath);`
 
@@ -48,10 +49,12 @@ datapath = 'pat/to/your/data'
 
     `Srep = Spk.spikeTrain;`
 
-2. Define parameters using SetMapsParams: 
+3. **Define parameters using SetMapsParams:**
+ 
     `mapsparams = SetMapsParams(Nav, Srep);`
 
-3. Modify paramters in `mapsparams` if needed. For instance:
+5. **Modify paramters in `mapsparams` if needed. For instance:**
+
     `mapsparams.subset.Condition = [1 3 5];`
    
     `mapsparams.subset.Condition_op = 'ismember';`
@@ -66,7 +69,8 @@ datapath = 'pat/to/your/data'
 
     `mapsparams.Yvariablename = [];`
 
-5. Perform place field analysis using MapsAnalysis
+7. **Perform place field analysis using MapsAnalysis**
+
     `Maps = MapsAnalysis(Nav, Srep, mapsparams);`
 
 For more detailed information and usage examples of each function, please refer to the function documentation, `Tutorial2.1` and `Tutorial_handson`.
