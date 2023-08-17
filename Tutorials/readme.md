@@ -1,4 +1,4 @@
-# Tutorials - Ratgroup
+# Tutorials
 This series of tutorials was designed to walk through the steps of how to:
 * pre-process neurophysiological and behavioral recordings (Tutorial1)
 * estimate tuning curves by linear average (Tutorial2.1)
