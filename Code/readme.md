@@ -53,6 +53,11 @@ In the `TFMaps` folder, you'll find functions to perform time-frequency analysis
 
 For detailed usage examples, refer to the [function documentation](/Code/TFMaps), [Tutorial4.1](../Tutorials) and [Tutorial_handson](../Tutorials).
 
-This toolbox was developed by J. Fournier in August 2023 for the Summer school "Advanced computational analysis for behavioral and neurophysiological recordings."
+  
+<br>
+
+This project is licensed under the MIT License.
+  
+This toolbox was developed by J. Fournier and Tulio Fernandez de Almeida in August 2023 for the Summer school "Advanced computational analysis for behavioral and neurophysiological recordings."
 
 
