@@ -1,6 +1,6 @@
 # Matlab Code-RatGroup
 This toolbox provides a collection of MATLAB functions designed to facilitate the analysis of neural and behavioral data. It covers estimating tuning curves, fitting generalized linear models, decoding spike train data, detecting cell assemblies, and performing time-frequency analysis. It was developed by J. Fournier in August 2023 for the Summer school "Advanced computational analysis for behavioral and neurophysiological recordings."
-It is associated to a set of [tutorials](#Tutorials) covering the aforementioned analyses step-by-step.
+It is associated to a set of [tutorials](#Tutorials) which cover the aforementioned analyses step-by-step.
 
 ## Table of Contents
 - [Load functions](#load-functions)
