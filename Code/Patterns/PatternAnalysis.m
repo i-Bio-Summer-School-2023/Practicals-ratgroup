@@ -44,11 +44,11 @@ function Pat = PatternAnalysis(Nav, Srep, pattparams)
 
 %%
 %Smoothing the spike train over the coincidence window to get spike counts
-decbinwin = 2 * floor(0.5 * pattparams.timewin * pattparams.sampleRate) + 1;
-if decbinwin > 1
+pattbinwin = 2 * floor(0.5 * pattparams.timewin * pattparams.sampleRate) + 1;
+if pattbinwin > 1
     spkCount = zeros(size(Srep));
     for icell = 1:size(Srep,2)
-        spkCount(:,icell) = smooth(Srep(:,icell), decbinwin) * decbinwin;
+        spkCount(:,icell) = smooth(Srep(:,icell), pattbinwin) * pattbinwin;
     end
 else
     spkCount = Srep;
@@ -124,8 +124,8 @@ if ~pattparams.Marcenko || pattparams.NoiseCov
     end
     %Initializing the random number generator for reproducibility purposes
     eigvalshf = NaN(size(Z,2), pattparams.nShuffle);
-    CorrmatSignal = 0;
-    parfor ishf = 1:pattparams.nShuffle
+    CorrmatShf = NaN(size(Z,2), size(Z,2), params.nShuffle);
+    parfor ishf = 1:params.nShuffle
         s = RandStream('mt19937ar','Seed',ishf);
         Zshf = NaN(size(Z));
         if nVars > 0
@@ -146,16 +146,16 @@ if ~pattparams.Marcenko || pattparams.NoiseCov
         end
 
         %Covariance matrix after shuffling
-        CorrmatShf = Zshf' * Zshf / ntimepts;
+        CorrmatShf(:,:,ishf) = Zshf' * Zshf / ntimepts;
         
         %Eigenvector decomposition from shuffled covariance
-        [~,Dshf] = eig(CorrmatShf);
+        [~,Dshf] = eig(CorrmatShf(:,:,ishf));
         eigvalshf(:,ishf) = diag(Dshf);
-
-        %Averaging shuffled covariance matrix, as an estimate of the signal
-        %covariance.
-        CorrmatSignal = CorrmatSignal + CorrmatShf / pattparams.nShuffle;
     end
+    %Averaging shuffled covariance matrix, as an estimate of the signal
+    %covariance.
+    CorrmatSignal = mean(CorrmatShf, 3, 'omitnan');
+
     if ~pattparams.Marcenko
         eigval_th = min(eigval(sum(eigval < eigvalshf, 2) / pattparams.nShuffle <= pattparams.pvalshf_th));
     end

@@ -84,9 +84,9 @@ ncells = size(spikeTrain, 2);
 
 %Smoothing spike trains over a time window. 
 spkCount = zeros(size(spikeTrain));
-decbinwin = 2 * floor(0.5 * crossparams.timewin * crossparams.sampleRate) + 1;
+crossbinwin = 2 * floor(0.5 * crossparams.timewin * crossparams.sampleRate) + 1;
 for icell = 1:size(spikeTrain,2)
-    spkCount(:,icell) = smooth(spikeTrain(:,icell), decbinwin, 'moving') * decbinwin;
+    spkCount(:,icell) = smooth(spikeTrain(:,icell), crossbinwin, 'moving') * crossbinwin;
 end
 
 %List of time indices to do the triggered average
@@ -137,7 +137,7 @@ ccAll = ccAll ./ sqrt(c1' * c1);
 %bins of variables indicated in 
 
 %The shuffling procedure consists in establishing a distribution of
-%eigenvalues obtained after shuffling time points within bins of the
+%cross-correlation functions after shuffling time points within bins of the
 %variables provided in crossparams.variablenames.
 %We first start by discretizing these variables.
 nVars = numel(crossparams.variablenames);
@@ -167,7 +167,7 @@ s = RandStream('mt19937ar','Seed',0);
 %speed bins over the subset of interest.
 for ishf = 1:crossparams.nShuffle
     %Shuffling spike trains
-    spikeTrainShf = NaN(size(spikeTrain));
+    spikeTrainShf = zeros(size(spikeTrain));
     for k = 1:nbins
         idx = find(tidx & varlin_discrete == k);
         for icell = 1:ncells
@@ -178,9 +178,9 @@ for ishf = 1:crossparams.nShuffle
 
     %Smoothing spike trains over a time window.
     spkCountShf = zeros(size(spikeTrainShf));
-    decbinwin = 2 * floor(0.5 * crossparams.timewin * crossparams.sampleRate) + 1;
+    crossbinwin = 2 * floor(0.5 * crossparams.timewin * crossparams.sampleRate) + 1;
     for icell = 1:size(spikeTrainShf,2)
-        spkCountShf(:,icell) = smooth(spikeTrainShf(:,icell), decbinwin, 'moving') * decbinwin;
+        spkCountShf(:,icell) = smooth(spikeTrainShf(:,icell), crossbinwin, 'moving') * crossbinwin;
     end
     
     %Padding spike counts and indices

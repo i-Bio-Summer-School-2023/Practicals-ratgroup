@@ -1,4 +1,4 @@
-function plot_handle = ciplot(x,lower,upper,colour,alpha)
+function p = ciplot(x,lower,upper,colour,alpha)
 % ciplot(x,lower,upper)
 % ciplot(x,lower,upper,colour)
 % ciplot(x,lower,upper,colour,alpha)
@@ -14,7 +14,7 @@ function plot_handle = ciplot(x,lower,upper,colour,alpha)
 % - alpha: Transparency of the shaded region (optional, default is 0.5).
 %
 % OUTPUT:
-% - plot_handle: Handle to the filled area plot.
+% - p: Handle to the filled area plot.
 %
 % USAGE:
 % ciplot(x, lower, upper, colour, alpha);
@@ -51,8 +51,9 @@ end
 if find(size(upper)==(max(size(upper))))<2
     upper=upper'; 
 end
-if nargout == 0
-    fill([x fliplr(x)],[upper fliplr(lower)], colour, 'EdgeColor', 'none', 'FaceAlpha',alpha);
-else
-    plot_handle = fill([x fliplr(x)],[upper fliplr(lower)], colour, 'EdgeColor', 'none', 'FaceAlpha',alpha);
+
+ph = fill([x fliplr(x)],[upper fliplr(lower)], colour, 'EdgeColor', 'none', 'FaceAlpha',alpha);
+
+if nargout > 0
+    p = ph;
 end
